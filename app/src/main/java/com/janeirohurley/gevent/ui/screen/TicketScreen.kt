@@ -110,7 +110,7 @@ fun TicketsScreen(modifier: Modifier = Modifier, navController: NavHostControlle
                         }
 
                         Button(
-                            onClick = { },
+                            onClick = { navController.navigate("view_ticket")},
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(4.dp),
                             colors = ButtonDefaults.buttonColors(

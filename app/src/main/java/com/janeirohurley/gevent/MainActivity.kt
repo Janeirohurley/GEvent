@@ -6,12 +6,19 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -23,7 +30,10 @@ import com.janeirohurley.gevent.ui.screen.CancelBookingScreen
 import com.janeirohurley.gevent.ui.screen.EventDetailsScreen
 import com.janeirohurley.gevent.ui.screen.FavoriteScreen
 import com.janeirohurley.gevent.ui.screen.HomeScreen
+import com.janeirohurley.gevent.ui.screen.OrderScreen
 import com.janeirohurley.gevent.ui.screen.TicketsScreen
+import com.janeirohurley.gevent.ui.screen.ViewTicket
+import com.janeirohurley.gevent.model.TicketModel
 import com.janeirohurley.gevent.ui.theme.GEventTheme
 
 class MainActivity : ComponentActivity() {
@@ -44,26 +54,37 @@ fun MainScreen() {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route ?: Screen.Home.route
+    val mainRoutes = com.janeirohurley.gevent.ui.components.NavigationItem.items.map { it.route }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
-            BottomNavigationBar(
-                selectedRoute = currentRoute,
-                onNavigate = { route ->
-                    navController.navigate(route) {
-                        // Pop up to the start destination to avoid building up a large stack
-                        popUpTo(Screen.Home.route) {
-                            saveState = true
-                        }
-                        // Avoid multiple copies of the same destination
-                        launchSingleTop = true
-                        // Restore state when reselecting a previously selected item
-                        restoreState = true
-                    }
+            if (currentRoute in mainRoutes) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    BottomNavigationBar(
+                        selectedRoute = currentRoute,
+                        onNavigate = { route ->
+                            navController.navigate(route) {
+                                popUpTo(Screen.Home.route) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        modifier = Modifier
+                    )
+                    // Fond sous la barre système pour continuité visuelle
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .navigationBarsPadding()
+                            .height(24.dp)
+                            .background(MaterialTheme.colorScheme.surface)
+                    )
                 }
-            )
+            }
         }
     ) { innerPadding ->
         NavHost(
@@ -101,6 +122,21 @@ fun MainScreen() {
             composable(Screen.Ticket.route) {
                 TicketsScreen(navController = navController)
             }
+            composable(Screen.viewTicket.route) {
+                // Ticket simulé pour la démo
+                val ticket = TicketModel(
+                    code = "ABC123456",
+                    eventTitle = "Soirée Networking Paris 2024 burundi",
+                    eventDate = "5 janvier 2026, 19:00",
+                    eventLocation = "Grand Palais, Bujumbura",
+                    holderName = "Jean Dupont",
+                    seat = "A12",
+                    price = "2000 Fbu",
+                    purchaseDate = "2 janvier 2026",
+                    qrCode = null
+                )
+                ViewTicket(ticket = ticket, onBack ={navController.popBackStack()})
+            }
             composable(Screen.Favorites.route) {
                 FavoriteScreen()
             }
@@ -128,7 +164,55 @@ fun MainScreen() {
                 )
             }
             composable(Screen.EventDetails.route) {
-                EventDetailsScreen(navController = navController, imageRes = R.drawable.event_image)
+                // Exemple d'EventUiModel fictif pour la démo
+                val event = com.janeirohurley.gevent.viewmodel.EventUiModel(
+                    id = "1",
+                    title = "Soirée Networking Paris 2024 burundi",
+                    date = "5 janvier 2026, 19:00",
+                    imageRes = R.drawable.event_image, // Remplace par une ressource valide
+                    isFavorite = false,
+                    creatorImageRes = R.drawable.creator_image, // Remplace par une ressource valide
+                    creatorName = "Jean Dupont",
+                    joinedAvatars = listOf(
+                        R.drawable.creator_image,
+                        R.drawable.event_image,
+
+                    ),
+                    isFree = false,
+                    price = "2000 Fbu"
+                )
+                EventDetailsScreen(navController = navController, event = event)
+            }
+
+            composable(Screen.Order.route) {
+                // Exemple d'EventUiModel fictif pour la démo
+                val event = com.janeirohurley.gevent.viewmodel.EventUiModel(
+                    id = "1",
+                    title = "Soirée Networking Paris 2024 burundi",
+                    date = "5 janvier 2026, 19:00",
+                    imageRes = R.drawable.event_image, // Remplace par une ressource valide
+                    isFavorite = false,
+                    creatorImageRes = R.drawable.creator_image, // Remplace par une ressource valide
+                    creatorName = "Jean Dupont",
+                    joinedAvatars = listOf(
+                        R.drawable.creator_image,
+                        R.drawable.event_image,
+
+                        ),
+                    isFree = false,
+                    price = "2000 Fbu"
+                )
+                OrderScreen(
+                    onBack = { navController.popBackStack() },
+                    event = event,
+                    onViewTicket = { navController.navigate("view_ticket") },
+                    onGoHome = {
+                        navController.navigate(Screen.Home.route) {
+                            popUpTo(Screen.Home.route) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
+                )
             }
         }
     }

@@ -1,41 +1,18 @@
+
 package com.janeirohurley.gevent.ui.screen
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.systemBars
-import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.Icons
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -44,79 +21,213 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.janeirohurley.gevent.R
-import com.janeirohurley.gevent.ui.components.Chip
-
+import com.janeirohurley.gevent.ui.components.AvatarGroup
+import com.janeirohurley.gevent.viewmodel.EventUiModel
 
 @Composable
 fun EventDetailsScreen(
     navController: NavHostController,
     modifier: Modifier = Modifier,
-    imageRes: Int
+    event: EventUiModel
 ) {
-    var floatingCardHeight by remember { mutableStateOf(0) }
+    var cardHeightPx by remember { mutableStateOf(0) }
+    val density = LocalDensity.current
 
     Box(modifier = modifier.fillMaxSize()) {
-        // Image en background
+        // Image de couverture edge-to-edge sous la status bar
         Image(
-            painter = painterResource(imageRes),
+            painter = painterResource(event.imageRes),
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(280.dp)
+                .height(320.dp)
+                .align(Alignment.TopCenter)
         )
 
         // Card flottante
         Card(
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(15.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .offset(y = 200.dp)
+                .padding(horizontal = 20.dp)
+                .offset(y = 240.dp)
                 .onGloballyPositioned { coordinates ->
-                    floatingCardHeight = coordinates.size.height
+                    cardHeightPx = coordinates.size.height
+                }
+                .shadow(0.dp, RoundedCornerShape(15.dp)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        ) {
+            Column(modifier = Modifier.padding(24.dp)) {
+                // Titre & prix
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+
+                ) {
+                    Text(
+                        text = event.title,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.weight(1f)
+                    )
+                    if (event.isFree) {
+                        Text(
+                            text = "Gratuit",
+                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    } else {
+                        Text(
+                            text = event.price ?: "",
+                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
 
-                .shadow(4.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-        ) {
-            Column(modifier = Modifier.padding(16.dp).background(MaterialTheme.colorScheme.primary)) {
-                Text(
-                    text = "Titre flottant",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    text = "Description courte de l'événement",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                )
+                Spacer(Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ){
+                    Column {
+                        // Lieu
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                painter = painterResource(R.drawable.fi_rr_marker),
+                                contentDescription = "Lieu",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                text = "Grand Palais, Paris", // À remplacer par event.location si dispo
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                        Spacer(Modifier.height(8.dp))
+
+                        // Date/heure
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                painter = painterResource(R.drawable.fi_rr_calendar) ,
+                                contentDescription = "Date",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                text = event.date,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+
+                        // Avatars participants
+                          }
+                    AvatarGroup(
+                            images = event.joinedAvatars,
+                    avatarSize = 30.dp,
+                    overlap = 14.dp,
+                    maxVisible = 5
+                    )
+                }
             }
         }
 
-        // LazyColumn scrollable
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .systemBarsPadding()
-                .padding(top = 200.dp + floatingCardHeight.toDp()) // <-- dynamique !
-        ) {
-            items(20) { index ->
-                Text(
-                    "Contenu scrollable $index",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                )
+        // LazyColumn scrollable sous la card flottante
+        val cardHeightDp = with(density) { cardHeightPx.toDp() }
+        // Utilisation d'une Box pour superposer la LazyColumn et le bouton
+        Box(modifier = Modifier.fillMaxSize()) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .systemBarsPadding()
+                    .padding(top = 240.dp + cardHeightDp, bottom = 80.dp) // Laisser de la place pour le bouton
+            ) {
+                item {
+                    // Section About
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp, vertical = 12.dp)
+                    ) {
+                        Text(
+                            text = "À propos",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(Modifier.height(6.dp))
+                        Text(
+                            text = "Venez découvrir un événement exceptionnel au cœur de Paris. Rencontrez des passionnés, échangez, partagez et vivez une expérience inoubliable !",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f)
+                        )
+                    }
+                }
+                item {
+                    // Section Organizers and Attendees
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp, vertical = 12.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // Avatar organisateur
+                            Image(
+                                painter = painterResource(event.creatorImageRes),
+                                contentDescription = "Organisateur",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                            )
+                            Spacer(Modifier.width(12.dp))
+                            Text(
+                                text = event.creatorName,
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.weight(1f)
+                            )
+                            IconButton(onClick = { /* TODO: action chat */ }) {
+                                Icon(
+                                    painter = painterResource(R.drawable.fi_rr_comment) ,
+                                    contentDescription = "Message",
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                    }
+                }
+                // ... Ajoutez d'autres sections si besoin ...
+            }
+            // Bouton fixé en bas
+            Button(
+                onClick = { navController.navigate("order_events") },
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 24.dp),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text(text = "Acheter un ticket", style = MaterialTheme.typography.titleMedium)
             }
         }
     }
 }
-
-// Extension helper pour convertir Int px -> dp
-@Composable
-fun Int.toDp(): Dp = with(LocalDensity.current) { this@toDp.toDp() }
 
