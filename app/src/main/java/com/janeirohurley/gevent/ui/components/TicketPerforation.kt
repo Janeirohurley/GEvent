@@ -15,15 +15,17 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun TicketPerforation(
     cardWidth: Dp,
-    cardHeight: Dp
+    dividerY: Float
 ) {
     val circleRadius = 25.dp // demi-cercle = rayon
-    val y = cardHeight / 2 + 137.dp
+    val overlap = 4.dp
+
     val perforationColor = MaterialTheme.colorScheme.background
 
     Canvas(modifier = Modifier.fillMaxSize()) {
         val radiusPx = circleRadius.toPx()
-        val yPx = y.toPx()
+        val yPx = dividerY * 1.07f
+        val o = overlap.toPx()
 
         // Demi-cercle gauche inversé
         drawArc(

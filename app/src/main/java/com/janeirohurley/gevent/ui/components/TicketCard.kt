@@ -18,9 +18,15 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -36,6 +42,8 @@ fun TicketCard(
     modifier: Modifier = Modifier
 ) {
     val scrollState = rememberScrollState()
+    var dividerY by remember { mutableStateOf<Float?>(null) }
+
 
     Column(
         modifier = modifier
@@ -73,7 +81,12 @@ fun TicketCard(
                             Image(painterResource(R.drawable.qrcode), contentDescription = "QR Code", modifier = Modifier.size(qrSize))
                         }
                         Spacer(Modifier.height(24.dp))
-                        DottedDivider()
+                        DottedDivider(
+                            modifier = Modifier.onGloballyPositioned {
+                                dividerY = it.positionInParent().y
+                            }
+                        )
+
                         Spacer(Modifier.height(18.dp))
                         Text(ticket.code.uppercase(), fontWeight = FontWeight.Bold, fontSize = 20.sp, color = MaterialTheme.colorScheme.primary, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
                         Spacer(Modifier.height(12.dp))
@@ -85,7 +98,12 @@ fun TicketCard(
                 }
 
                 // 🎯 Boules perforation toujours visibles
-                TicketPerforation(cardWidth = cardWidth, cardHeight = cardHeight)
+                dividerY?.let { y ->
+                    TicketPerforation(
+                        cardWidth = cardWidth,
+                        dividerY = y
+                    )
+                }
             }
         }
 

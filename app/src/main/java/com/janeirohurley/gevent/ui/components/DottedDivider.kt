@@ -11,9 +11,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun DottedDivider() {
+fun DottedDivider(
+    modifier: Modifier = Modifier
+) {
     Canvas(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(1.dp)
     ) {
@@ -31,3 +33,4 @@ fun DottedDivider() {
         }
     }
 }
+
