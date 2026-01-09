@@ -20,11 +20,17 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // Optimisation: Active R8 pour minifier et optimiser le code
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+        }
+        debug {
+            // Mode debug reste non-minifié pour faciliter le développement
+            isMinifyEnabled = false
         }
     }
     compileOptions {

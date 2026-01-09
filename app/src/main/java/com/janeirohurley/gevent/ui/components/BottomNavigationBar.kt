@@ -3,6 +3,7 @@ package com.janeirohurley.gevent.ui.components
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -111,23 +112,27 @@ private fun BottomNavItem(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
+    // Optimisation: Animations plus rapides et specs simplifiées
     val iconColor by animateColorAsState(
-        if (isSelected)
+        targetValue = if (isSelected)
             MaterialTheme.colorScheme.primary
         else
             MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+        animationSpec = tween(durationMillis = 150),
         label = "iconColor"
     )
 
     val indicatorWidth by animateDpAsState(
-        if (isSelected) 30.dp else 0.dp,
+        targetValue = if (isSelected) 30.dp else 0.dp,
+        animationSpec = tween(durationMillis = 150),
         label = "indicatorWidth"
     )
 
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val alpha by animateFloatAsState(
-        if (isPressed) 0.6f else 1f,
+        targetValue = if (isPressed) 0.6f else 1f,
+        animationSpec = tween(durationMillis = 100),
         label = "pressAlpha"
     )
 

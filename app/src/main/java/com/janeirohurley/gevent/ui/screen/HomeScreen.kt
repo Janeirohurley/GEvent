@@ -14,6 +14,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -134,16 +135,18 @@ fun HomeScreen(modifier: Modifier = Modifier,navController:NavHostController ) {
         )
     }
 
-    // Filtrer les événements selon le filtre sélectionné et la recherche
-    val filteredEvents = remember(selectedFilter, searchQuery) {
-        events.filter { event ->
-            val matchesSearch = searchQuery.isEmpty() ||
-                event.title.contains(searchQuery, ignoreCase = true)
+    // Optimisation: Utiliser derivedStateOf pour éviter les recompositions inutiles
+    val filteredEvents by remember {
+        derivedStateOf {
+            events.filter { event ->
+                val matchesSearch = searchQuery.isEmpty() ||
+                    event.title.contains(searchQuery, ignoreCase = true)
 
-            val matchesFilter = selectedFilter == null ||
-                event.title.contains(selectedFilter!!, ignoreCase = true)
+                val matchesFilter = selectedFilter == null ||
+                    event.title.contains(selectedFilter!!, ignoreCase = true)
 
-            matchesSearch && matchesFilter
+                matchesSearch && matchesFilter
+            }
         }
     }
 
@@ -182,33 +185,23 @@ fun HomeScreen(modifier: Modifier = Modifier,navController:NavHostController ) {
                 )
             }
 
-            AnimatedVisibility(
-                visible = true,
-                enter = fadeIn(animationSpec = tween(300)) + slideInVertically(
-                    initialOffsetY = { -40 },
-                    animationSpec = tween(300, easing = EaseOutCubic)
-                )
-            ) {
-                SearchBar(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    onFilterClick = { showFilterMenu = !showFilterMenu },
-                    placeholder = "Rechercher un événement...",
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
+            // Optimisation: Suppression de l'animation inutile sur SearchBar
+            SearchBar(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                onFilterClick = { showFilterMenu = !showFilterMenu },
+                placeholder = "Rechercher un événement...",
+                modifier = Modifier.fillMaxWidth()
+            )
 
             // -------------------------
             // Filtres horizontaux (sous la SearchBar, aussi fixe)
             // -------------------------
+            // Optimisation: Animation simplifiée et plus rapide
             AnimatedVisibility(
                 visible = showFilterMenu,
-                enter = fadeIn(animationSpec = tween(300)) + expandVertically(
-                    animationSpec = tween(300, easing = EaseOutCubic)
-                ),
-                exit = fadeOut(animationSpec = tween(200)) + shrinkVertically(
-                    animationSpec = tween(200, easing = EaseInCubic)
-                )
+                enter = expandVertically(animationSpec = tween(200)),
+                exit = shrinkVertically(animationSpec = tween(150))
             ) {
                 Column {
                     Spacer(modifier = Modifier.height(8.dp))

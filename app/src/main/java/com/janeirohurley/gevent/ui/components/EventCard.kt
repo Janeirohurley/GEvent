@@ -2,6 +2,7 @@ package com.janeirohurley.gevent.ui.components
 
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -47,11 +48,14 @@ fun EventCard(
     isFree: Boolean = true,
     price: String? = null // Prix si payant (ex: "5000 BIF")
 ) {
+    // Optimisation: Créer l'interactionSource une seule fois
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
 
+    // Optimisation: Animation plus rapide et légère
     val alpha by animateFloatAsState(
         targetValue = if (isPressed) 0.85f else 1f,
+        animationSpec = tween(durationMillis = 100), // Plus rapide
         label = "cardAlpha"
     )
 

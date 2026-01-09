@@ -6,6 +6,8 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,6 +28,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.janeirohurley.gevent.navigation.Screen
 import com.janeirohurley.gevent.ui.components.BottomNavigationBar
+import com.janeirohurley.gevent.ui.navigation.*
 import com.janeirohurley.gevent.ui.screen.CancelBookingScreen
 import com.janeirohurley.gevent.ui.screen.EventDetailsScreen
 import com.janeirohurley.gevent.ui.screen.FavoriteScreen
@@ -34,6 +37,8 @@ import com.janeirohurley.gevent.ui.screen.OrderScreen
 import com.janeirohurley.gevent.ui.screen.TicketsScreen
 import com.janeirohurley.gevent.ui.screen.ViewTicket
 import com.janeirohurley.gevent.model.TicketModel
+import com.janeirohurley.gevent.ui.screen.ProfileScreen
+import com.janeirohurley.gevent.ui.screen.SettingScreen
 import com.janeirohurley.gevent.ui.theme.GEventTheme
 
 class MainActivity : ComponentActivity() {
@@ -43,6 +48,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             GEventTheme {
+                // Version originale avec transitions ultra-rapides (150ms)
                 MainScreen()
             }
         }
@@ -54,7 +60,9 @@ fun MainScreen() {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route ?: Screen.Home.route
-    val mainRoutes = com.janeirohurley.gevent.ui.components.NavigationItem.items.map { it.route }
+    val mainRoutes = remember {
+        com.janeirohurley.gevent.ui.components.NavigationItem.items.map { it.route }
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -65,12 +73,15 @@ fun MainScreen() {
                     BottomNavigationBar(
                         selectedRoute = currentRoute,
                         onNavigate = { route ->
-                            navController.navigate(route) {
-                                popUpTo(Screen.Home.route) {
-                                    saveState = true
+                            // Optimisation: Navigation ultra-rapide avec cache d'état
+                            if (currentRoute != route) {
+                                navController.navigate(route) {
+                                    popUpTo(Screen.Home.route) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
                                 }
-                                launchSingleTop = true
-                                restoreState = true
                             }
                         },
                         modifier = Modifier
@@ -91,29 +102,18 @@ fun MainScreen() {
             navController = navController,
             startDestination = Screen.Home.route,
             modifier = Modifier.padding(innerPadding),
+            // Transitions ULTRA-RAPIDES: 150ms avec fade simple
             enterTransition = {
-                slideInHorizontally(
-                    initialOffsetX = { fullWidth -> fullWidth },
-                    animationSpec = tween(300)
-                ) + fadeIn(animationSpec = tween(300))
+                fadeIn(animationSpec = tween(150))
             },
             exitTransition = {
-                slideOutHorizontally(
-                    targetOffsetX = { fullWidth -> -fullWidth / 3 },
-                    animationSpec = tween(300)
-                ) + fadeOut(animationSpec = tween(300))
+                fadeOut(animationSpec = tween(100))
             },
             popEnterTransition = {
-                slideInHorizontally(
-                    initialOffsetX = { fullWidth -> -fullWidth / 3 },
-                    animationSpec = tween(300)
-                ) + fadeIn(animationSpec = tween(300))
+                fadeIn(animationSpec = tween(150))
             },
             popExitTransition = {
-                slideOutHorizontally(
-                    targetOffsetX = { fullWidth -> fullWidth },
-                    animationSpec = tween(300)
-                ) + fadeOut(animationSpec = tween(300))
+                fadeOut(animationSpec = tween(100))
             }
         ) {
             composable(Screen.Home.route) {
@@ -140,14 +140,12 @@ fun MainScreen() {
             composable(Screen.Favorites.route) {
                 FavoriteScreen()
             }
-//            composable(Screen.Setting.route) {
-//                // TODO: Create SettingScreen
-//                HomeScreen()
-//            }
-//            composable(Screen.Profile.route) {
-//                // TODO: Create ProfileScreen
-//                HomeScreen()
-//            }
+            composable(Screen.Setting.route) {
+                SettingScreen()
+            }
+            composable(Screen.Profile.route) {
+                ProfileScreen()
+            }
             composable(Screen.CancelBooking.route) {
                 CancelBookingScreen(
                     reasons = listOf(
