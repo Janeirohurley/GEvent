@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import coil.compose.AsyncImage
 import com.janeirohurley.gevent.R
 import com.janeirohurley.gevent.ui.components.AvatarGroup
 import com.janeirohurley.gevent.viewmodel.EventUiModel
@@ -37,21 +38,36 @@ fun EventDetailsScreen(
     val density = LocalDensity.current
 
     Box(modifier = modifier.fillMaxSize()) {
-        // Image de couverture edge-to-edge sous la status bar
-        Image(
-            painter = painterResource(event.imageRes),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(320.dp)
-                .align(Alignment.TopCenter)
-        )
+        // Image de couverture edge-to-edge sous la status bar - Support images locales et réseau
+        when (event.imageRes) {
+            is Int -> {
+                Image(
+                    painter = painterResource(event.imageRes),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(320.dp)
+                        .align(Alignment.TopCenter)
+                )
+            }
+            is String -> {
+                AsyncImage(
+                    model = event.imageRes,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(320.dp)
+                        .align(Alignment.TopCenter)
+                )
+            }
+        }
 
         // Card flottante
         Card(
             shape = RoundedCornerShape(15.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp)
@@ -75,21 +91,7 @@ fun EventDetailsScreen(
                         color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.weight(1f)
                     )
-                    if (event.isFree) {
-                        Text(
-                            text = "Gratuit",
-                            color = MaterialTheme.colorScheme.primary,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                    } else {
-                        Text(
-                            text = event.price ?: "",
-                            color = MaterialTheme.colorScheme.primary,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
+
                 }
 
                 Spacer(Modifier.height(12.dp))
@@ -110,7 +112,7 @@ fun EventDetailsScreen(
                             )
                             Spacer(Modifier.width(6.dp))
                             Text(
-                                text = "Grand Palais, Paris", // À remplacer par event.location si dispo
+                                text = event.location ?: "Lieu non spécifié",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
@@ -135,13 +137,44 @@ fun EventDetailsScreen(
 
                         // Avatars participants
                           }
-                    AvatarGroup(
-                            images = event.joinedAvatars,
-                    avatarSize = 30.dp,
-                    overlap = 14.dp,
-                    maxVisible = 5
-                    )
+
                 }
+                Spacer(Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ){
+                    // N'afficher les avatars que s'ils existent
+                    if (event.joinedAvatars.isNotEmpty()) {
+                        AvatarGroup(
+                            images = event.joinedAvatars,
+                            avatarSize = 30.dp,
+                            overlap = 14.dp,
+                            maxVisible = 5
+                        )
+                    } else {
+                        // Espace vide pour maintenir l'alignement
+                        Spacer(modifier = Modifier.width(1.dp))
+                    }
+
+                    if (event.isFree) {
+                        Text(
+                            text = "Gratuit",
+                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    } else {
+                        Text(
+                            text = event.price ?: "",
+                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+
             }
         }
 
@@ -170,7 +203,7 @@ fun EventDetailsScreen(
                         )
                         Spacer(Modifier.height(6.dp))
                         Text(
-                            text = "Venez découvrir un événement exceptionnel au cœur de Paris. Rencontrez des passionnés, échangez, partagez et vivez une expérience inoubliable !",
+                            text = event.description ?: "Aucune description disponible pour cet événement.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f)
                         )
@@ -187,15 +220,29 @@ fun EventDetailsScreen(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            // Avatar organisateur
-                            Image(
-                                painter = painterResource(event.creatorImageRes),
-                                contentDescription = "Organisateur",
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(CircleShape)
-                            )
+                            // Avatar organisateur - Support images locales et réseau
+                            when (event.creatorImageRes) {
+                                is Int -> {
+                                    Image(
+                                        painter = painterResource(event.creatorImageRes),
+                                        contentDescription = "Organisateur",
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier
+                                            .size(40.dp)
+                                            .clip(CircleShape)
+                                    )
+                                }
+                                is String -> {
+                                    AsyncImage(
+                                        model = event.creatorImageRes,
+                                        contentDescription = "Organisateur",
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier
+                                            .size(40.dp)
+                                            .clip(CircleShape)
+                                    )
+                                }
+                            }
                             Spacer(Modifier.width(12.dp))
                             Text(
                                 text = event.creatorName,
@@ -218,7 +265,7 @@ fun EventDetailsScreen(
             }
             // Bouton fixé en bas
             Button(
-                onClick = { navController.navigate("order_events") },
+                onClick = { navController.navigate("order/${event.id}") },
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()

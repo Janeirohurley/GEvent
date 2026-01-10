@@ -29,6 +29,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import com.janeirohurley.gevent.R
 
 
@@ -37,16 +38,17 @@ import com.janeirohurley.gevent.R
 fun EventCard(
     title: String,
     date: String,
-    imageRes: Int,
+    imageRes: Any, // Peut être Int (ressource locale) ou String (URL)
     modifier: Modifier = Modifier,
     isFavorite: Boolean = false,
     onClick: () -> Unit,
     onFavoriteClick: (() -> Unit)? = null,
-    creatorImageRes: Int,
+    creatorImageRes: Any, // Peut être Int (ressource locale) ou String (URL)
     creatorName: String,
-    joinedAvatars: List<Int>,
+    joinedAvatars: List<Any>, // Peut contenir Int ou String
     isFree: Boolean = true,
-    price: String? = null // Prix si payant (ex: "5000 BIF")
+    price: String? = null, // Prix si payant (ex: "5000 BIF")
+    categorie_name: String
 ) {
     // Optimisation: Créer l'interactionSource une seule fois
     val interactionSource = remember { MutableInteractionSource() }
@@ -76,18 +78,42 @@ fun EventCard(
         Column {
             // 🖼 Image
             Box {
-                Image(
-                    painter = painterResource(imageRes),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
+                // Support des images locales et réseau
+                when (imageRes) {
+                    is Int -> {
+                        Image(
+                            painter = painterResource(imageRes),
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp)
+                        )
+                    }
+                    is String -> {
+                        AsyncImage(
+                            model = imageRes,
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp)
+                        )
+                    }
+                }
+
+                // 🏷️ Category chip (top-left)
+                Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp)
-                )
-                Chip(text = "Celebration",
-                    customColor = MaterialTheme.colorScheme.background.copy(0.2f),
-                    customContentColor = MaterialTheme.colorScheme.surface
-                )
+                        .align(Alignment.TopStart)
+                        .padding(8.dp)
+                ) {
+                    Chip(
+                        text = categorie_name,
+                        customColor = MaterialTheme.colorScheme.background.copy(0.2f),
+                        customContentColor = MaterialTheme.colorScheme.surface
+                    )
+                }
 
 
                 // ❤️ Favorite icon (optionnel)
@@ -133,15 +159,31 @@ fun EventCard(
                         .padding(8.dp)
 
                 ) {
-                    Image(
-                        painter = painterResource(creatorImageRes),
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .height(40.dp)
-                            .width(40.dp)
-                            .shadow(1.dp, CircleShape)
-                    )
+                    // Support des images locales et réseau pour le créateur
+                    when (creatorImageRes) {
+                        is Int -> {
+                            Image(
+                                painter = painterResource(creatorImageRes),
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .height(40.dp)
+                                    .width(40.dp)
+                                    .shadow(1.dp, CircleShape)
+                            )
+                        }
+                        is String -> {
+                            AsyncImage(
+                                model = creatorImageRes,
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .height(40.dp)
+                                    .width(40.dp)
+                                    .shadow(1.dp, CircleShape)
+                            )
+                        }
+                    }
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = creatorName,
@@ -182,10 +224,16 @@ fun EventCard(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    AvatarGroup(
-                        images = joinedAvatars,
-                        maxVisible = 5 // Afficher max 3 avatars, le reste sera "+N"
-                    )
+                    // N'afficher les avatars que s'ils existent
+                    if (joinedAvatars.isNotEmpty()) {
+                        AvatarGroup(
+                            images = joinedAvatars,
+                            maxVisible = 5
+                        )
+                    } else {
+                        // Espace vide pour maintenir l'alignement
+                        Spacer(modifier = Modifier.width(1.dp))
+                    }
 
                     // Chip prix
                     Chip(
@@ -193,7 +241,8 @@ fun EventCard(
                         customColor = if (isFree)
                             Color(0xFF4CAF50).copy(alpha = 0.9f)
                         else
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.9f)
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.9f),
+                        customContentColor = MaterialTheme.colorScheme.background
                     )
 
                 }

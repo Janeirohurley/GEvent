@@ -6,9 +6,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -17,19 +20,31 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.janeirohurley.gevent.ui.components.Filter
 import com.janeirohurley.gevent.ui.components.MapEventList
 import com.janeirohurley.gevent.ui.components.RecommendationCard
 import com.janeirohurley.gevent.ui.components.SearchBar
 import com.janeirohurley.gevent.viewmodel.EventUiModel
+import com.janeirohurley.gevent.viewmodel.EventViewModel
+import com.janeirohurley.gevent.utils.DataMapper.toUiModelList
 import com.janeirohurley.gevent.R
 import com.janeirohurley.gevent.ui.components.MapEventListOrientation
 import com.janeirohurley.gevent.ui.components.UpcomingEventCard
+import com.janeirohurley.gevent.ui.components.UpcomingEventCardSkeleton
+import com.janeirohurley.gevent.ui.components.EventCardSkeleton
+import com.janeirohurley.gevent.ui.components.RecommendationCardSkeleton
+import com.janeirohurley.gevent.ui.components.EmptyEventsState
+import com.janeirohurley.gevent.ui.components.EmptySearchState
+import com.janeirohurley.gevent.ui.components.shimmerEffect
+import com.janeirohurley.gevent.viewmodel.UserViewModel
+import com.janeirohurley.gevent.utils.DateFormatter
 
 // Fonction pour obtenir la couleur personnalisée de chaque filtre
 fun getFilterColor(filter: String): Color {
@@ -46,7 +61,12 @@ fun getFilterColor(filter: String): Color {
 }
 
 @Composable
-fun HomeScreen(modifier: Modifier = Modifier,navController:NavHostController ) {
+fun HomeScreen(
+    modifier: Modifier = Modifier,
+    navController: NavHostController,
+    viewModel: EventViewModel = viewModel(),
+    userViewModel: UserViewModel = viewModel()
+) {
 
     // -------------------------
     // États avec préservation
@@ -61,93 +81,110 @@ fun HomeScreen(modifier: Modifier = Modifier,navController:NavHostController ) {
     val filterScrollState = rememberScrollState()
     val upcomingEventsScrollState = rememberLazyListState()
 
-    val events = remember {
-        listOf(
-            EventUiModel(
-                id = "1",
-                title = "Concert Live",
-                date = "THU 26 Mai,09:00 - FRI 27 Mai,10:00",
-                imageRes = R.drawable.creator_image,
-                creatorImageRes = R.drawable.creator_image,
-                creatorName = "Janeiro Hurley",
-                joinedAvatars = listOf(
-                    R.drawable.event_image,
-                    R.drawable.creator_image
-                ),
-                isFree = false,
-                price = "10.000 BIF",
-                isFavorite = true
-            ),
-            EventUiModel(
-                id = "2",
-                title = "Tech Meetup",
-                date = "18 Avril 2026",
-                imageRes = R.drawable.event_image,
-                creatorImageRes = R.drawable.creator_image,
-                creatorName = "Janeiro Hurley",
-                joinedAvatars = listOf(
-                    R.drawable.event_image,
-                    R.drawable.creator_image
-                ),
-                isFree = true
-            ),
-            EventUiModel(
-                id = "3",
-                title = "Festival Film",
-                date = "THU 26 Mai ,09:00 - FRI 27 Mai,10:00",
-                imageRes = R.drawable.event_image,
-                creatorImageRes = R.drawable.creator_image,
-                creatorName = "Janeiro Hurley",
-                joinedAvatars = listOf(
-                    R.drawable.event_image,
-                    R.drawable.creator_image
-                ),
-                isFree = false,
-                price = "5.000 BIF"
-            ),
-            EventUiModel(
-                id = "4",
-                title = "Exposition d'Art",
-                date = "2 Mai 2026",
-                imageRes = R.drawable.event_image,
-                creatorImageRes = R.drawable.creator_image,
-                creatorName = "Janeiro Hurley",
-                joinedAvatars = listOf(
-                    R.drawable.event_image,
-                    R.drawable.creator_image
-                ),
-                isFree = true
-            ),
-            EventUiModel(
-                id = "5",
-                title = "Marathon",
-                date = "10 Mai 2026",
-                imageRes = R.drawable.event_image,
-                creatorImageRes = R.drawable.creator_image,
-                creatorName = "Janeiro Hurley",
-                joinedAvatars = listOf(
-                    R.drawable.event_image,
-                    R.drawable.creator_image
-                ),
-                isFree = false,
-                price = "15.000 BIF"
-            )
+    // États du ViewModel
+    val apiEvents by viewModel.events.collectAsState()
+    val popularEvents by viewModel.popularEvents.collectAsState()
+    val upcomingEvents by viewModel.upcomingEvents.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val error by viewModel.error.collectAsState()
+
+    // États de l'utilisateur
+    val currentUser by userViewModel.currentUser.collectAsState()
+
+    // Charger les données au démarrage
+    LaunchedEffect(Unit) {
+        viewModel.loadEvents()
+        viewModel.loadPopularEvents()
+        viewModel.loadUpcomingEvents()
+        userViewModel.loadProfile()
+    }
+
+    // Charger les données en fonction du filtre et de la recherche
+    LaunchedEffect(selectedFilter, searchQuery) {
+        viewModel.loadEvents(
+            category = selectedFilter,
+            search = searchQuery.ifEmpty { null }
         )
     }
 
-    // Optimisation: Utiliser derivedStateOf pour éviter les recompositions inutiles
-    val filteredEvents by remember {
-        derivedStateOf {
-            events.filter { event ->
-                val matchesSearch = searchQuery.isEmpty() ||
-                    event.title.contains(searchQuery, ignoreCase = true)
+    // Convertir les événements API en EventUiModel de manière sécurisée
+    val events = remember(apiEvents) {
+        try {
+            apiEvents.toUiModelList()
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
 
-                val matchesFilter = selectedFilter == null ||
-                    event.title.contains(selectedFilter!!, ignoreCase = true)
+    val popularEventsUi = remember(popularEvents) {
+        try {
+            popularEvents.toUiModelList()
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
 
-                matchesSearch && matchesFilter
+    val upcomingEventsUi = remember(upcomingEvents) {
+        try {
+            upcomingEvents.toUiModelList()
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    // Événements filtrés (déjà filtrés par l'API, mais on peut ajouter un filtre local)
+    val filteredEvents = events
+
+    // Afficher une erreur réseau globale si nécessaire
+    if (error != null && !isLoading && events.isEmpty() && popularEventsUi.isEmpty() && upcomingEventsUi.isEmpty()) {
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.fi_rr_wifi_slash),
+                contentDescription = "Erreur réseau",
+                tint = MaterialTheme.colorScheme.error,
+                modifier = Modifier.size(64.dp)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Erreur de connexion",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.error
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = error ?: "Impossible de charger les données",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+            Button(
+                onClick = {
+                    viewModel.clearError()
+                    viewModel.loadEvents()
+                    viewModel.loadPopularEvents()
+                    viewModel.loadUpcomingEvents()
+                },
+                shape = RoundedCornerShape(10.dp)
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.fi_rr_rotate_right),
+                    contentDescription = "Réessayer",
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Réessayer")
             }
         }
+        return
     }
 
     // -------------------------
@@ -170,8 +207,12 @@ fun HomeScreen(modifier: Modifier = Modifier,navController:NavHostController ) {
                 modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                val userName = currentUser?.let {
+                    it.firstName ?: it.username
+                } ?: "Utilisateur"
+
                 Text(
-                    text = "Bonjour Janvier",
+                    text = "Bonjour $userName",
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.weight(1f),
                     fontWeight = FontWeight.Bold
@@ -239,155 +280,281 @@ fun HomeScreen(modifier: Modifier = Modifier,navController:NavHostController ) {
         ) {
 
 
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-            ) {
-                Text(
-                    text = "Evenements à venir",
-                    style = MaterialTheme.typography.titleMedium,
-                )
+            // Titre avec skeleton pendant le chargement
+            if (isLoading && upcomingEventsUi.isEmpty()) {
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .width(180.dp)
+                            .height(24.dp)
+                            .clip(RoundedCornerShape(6.dp))
+                            .shimmerEffect()
+                    )
+                    Box(
+                        modifier = Modifier
+                            .width(50.dp)
+                            .height(24.dp)
+                            .clip(RoundedCornerShape(6.dp))
+                            .shimmerEffect()
+                    )
+                }
+            } else {
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    Text(
+                        text = "Evenements à venir",
+                        style = MaterialTheme.typography.titleMedium,
+                    )
 
-                Text(
-                    text = "Tous",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
+                    Text(
+                        text = "Tous",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
-            // Liste Horizontal A venier
 
-            LazyRow(
-                state = upcomingEventsScrollState,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 12.dp),
-                contentPadding = PaddingValues(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                item {
-                    UpcomingEventCard(
-                        title = "Festival de Musique 2026",
-                        date = "SAT 15 Mai 2026, 18:00",
-                        location = "Bujumbura",
-                        imageRes = R.drawable.event_image,
-                        onClick = { println("Festival de Musique clicked") }
-
-                    )
+            // Afficher un skeleton de chargement ou les événements à venir
+            if (isLoading && upcomingEventsUi.isEmpty()) {
+                LazyRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    userScrollEnabled = false
+                ) {
+                    items(3) {
+                        UpcomingEventCardSkeleton()
+                    }
                 }
-                item {
-                    UpcomingEventCard(
-                        title = "Concert Live Rock",
-                        date = "FRI 20 Juin 2026, 20:00",
-                        location = "Gitega",
-                        imageRes = R.drawable.creator_image,
-                        onClick = { println("Concert Live Rock clicked") }
-                    )
-
+            } else if (!isLoading && upcomingEventsUi.isEmpty()) {
+                EmptyEventsState(
+                    message = "Aucun événement à venir disponible",
+                    onRefresh = if (error != null) {
+                        { viewModel.loadUpcomingEvents() }
+                    } else null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(250.dp)
+                )
+            } else if (upcomingEventsUi.isNotEmpty()) {
+                LazyRow(
+                    state = upcomingEventsScrollState,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(upcomingEventsUi.size) { index ->
+                        val event = upcomingEventsUi[index]
+                        UpcomingEventCard(
+                            title = event.title,
+                            date = DateFormatter.formatShortDate(event.date),
+                            location = event.location ?: "Burundi",
+                            imageRes = event.imageRes,
+                            onClick = {
+                                navController.navigate("event_details/${event.id}")
+                            }
+                        )
+                    }
                 }
-
-                   item {
-                    UpcomingEventCard(
-                        title = "Théâtre Moderne",
-                        date = "WED 10 Juillet 2026, 19:30",
-                        location = "Bujumbura",
-                        imageRes = R.drawable.event_image,
-                        onClick = { println("Théâtre Moderne clicked") }
-                    )
-                }
-
             }
             // -------------------------
             // Liste des événements avec MapEventList
             // -------------------------
 
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-            ) {
-                Text(
-                    text = "Événement Populaire",
-                    style = MaterialTheme.typography.titleMedium,
-                )
-
-                Text(
-                    text = "Tous",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-
-            MapEventList(
-                events = filteredEvents,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(350.dp),
-                orientation = MapEventListOrientation.HORIZONTAL,
-                onEventClick = { event ->
-                    // Action au clic sur un événement
-                    println("Event clicked: ${event.title}")
-                },
-                onFavoriteClick = { event ->
-                    // Toggle favoris
-                    println("Favorite toggled for: ${event.title}")
+            // Titre avec skeleton pendant le chargement
+            if (isLoading && popularEventsUi.isEmpty()) {
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .width(180.dp)
+                            .height(24.dp)
+                            .clip(RoundedCornerShape(6.dp))
+                            .shimmerEffect()
+                    )
+                    Box(
+                        modifier = Modifier
+                            .width(50.dp)
+                            .height(24.dp)
+                            .clip(RoundedCornerShape(6.dp))
+                            .shimmerEffect()
+                    )
                 }
-            )
+            } else {
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                ) {
+                    Text(
+                        text = "Événement Populaire",
+                        style = MaterialTheme.typography.titleMedium,
+                    )
 
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-            ) {
-                Text(
-                    text = "Recommandation Pour Toi",
-                    style = MaterialTheme.typography.titleMedium,
+                    Text(
+                        text = "Tous",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+
+            // Afficher les événements populaires avec skeleton loading
+            if (isLoading && popularEventsUi.isEmpty()) {
+                LazyRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    userScrollEnabled = false
+                ) {
+                    items(2) {
+                        EventCardSkeleton(
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+            } else if (!isLoading && popularEventsUi.isEmpty()) {
+                EmptyEventsState(
+                    message = "Aucun événement populaire disponible",
+                    onRefresh = if (error != null) {
+                        { viewModel.loadPopularEvents() }
+                    } else null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(350.dp)
                 )
-
-                Text(
-                    text = "Tous",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary
+            } else if (popularEventsUi.isNotEmpty()) {
+                MapEventList(
+                    events = popularEventsUi,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(350.dp),
+                    orientation = MapEventListOrientation.HORIZONTAL,
+                    onEventClick = { event ->
+                        navController.navigate("event_details/${event.id}")
+                    },
+                    onFavoriteClick = { event ->
+                        // Toggle favoris via ViewModel
+                        viewModel.toggleFavorite(event.id, event.isFavorite)
+                    }
                 )
             }
-            // Liste verticale de recommandations
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                RecommendationCard(
-                    title = "Festival de Musique 2026",
-                    date = "SAT 15 Mai 2026, 18:00",
-                    location = "Bujumbura",
-                    imageRes = R.drawable.event_image,
-                    isFree = false,
-                    price = "2.000 BIF",
-                    onClick = { println("Festival de Musique clicked") }
-                )
 
-                RecommendationCard(
-                    title = "Concert Live Rock",
-                    date = "FRI 20 Juin 2026, 20:00",
-                    location = "Gitega",
-                    imageRes = R.drawable.creator_image,
-                    isFree = false,
-                    price = "5.000 BIF",
-                    onClick = { navController.navigate("event_details") }
-                )
+            // Titre avec skeleton pendant le chargement
+            if (isLoading && filteredEvents.isEmpty()) {
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .width(220.dp)
+                            .height(24.dp)
+                            .clip(RoundedCornerShape(6.dp))
+                            .shimmerEffect()
+                    )
+                    Box(
+                        modifier = Modifier
+                            .width(50.dp)
+                            .height(24.dp)
+                            .clip(RoundedCornerShape(6.dp))
+                            .shimmerEffect()
+                    )
+                }
+            } else {
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    Text(
+                        text = "Recommandation Pour Toi",
+                        style = MaterialTheme.typography.titleMedium,
+                    )
 
-                RecommendationCard(
-                    title = "Théâtre Moderne",
-                    date = "WED 10 Juillet 2026, 19:30",
-                    location = "Bujumbura",
-                    imageRes = R.drawable.event_image,
-                    isFree = true,
-                    onClick = { println("Théâtre Moderne clicked") }
-                )
+                    Text(
+                        text = "Tous",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+
+            // Liste verticale de recommandations avec skeleton loading
+            if (isLoading && filteredEvents.isEmpty()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    repeat(3) {
+                        RecommendationCardSkeleton()
+                    }
+                }
+            } else if (!isLoading && filteredEvents.isEmpty()) {
+                if (searchQuery.isNotEmpty()) {
+                    EmptySearchState(
+                        query = searchQuery,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(300.dp)
+                    )
+                } else {
+                    EmptyEventsState(
+                        message = "Aucune recommandation disponible",
+                        onRefresh = if (error != null) {
+                            { viewModel.loadEvents() }
+                        } else null,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(300.dp)
+                    )
+                }
+            } else if (filteredEvents.isNotEmpty()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    filteredEvents.take(5).forEach { event ->
+                        RecommendationCard(
+                            title = event.title,
+                            date = DateFormatter.formatDate(event.date),
+                            location = event.location ?: "Burundi",
+                            imageRes = event.imageRes,
+                            isFree = event.isFree,
+                            price = event.price ?: "Gratuit",
+                            onClick = {
+                                navController.navigate("event_details/${event.id}")
+                            }
+                        )
+                    }
+                }
             }
 
 

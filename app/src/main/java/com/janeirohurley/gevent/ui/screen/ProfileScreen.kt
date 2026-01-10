@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,11 +21,35 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import com.janeirohurley.gevent.R
+import com.janeirohurley.gevent.viewmodel.AuthViewModel
+import com.janeirohurley.gevent.viewmodel.UserViewModel
+import coil.compose.AsyncImage
 
 @Composable
-fun ProfileScreen(modifier: Modifier = Modifier) {
+fun ProfileScreen(
+    modifier: Modifier = Modifier,
+    navController: NavHostController? = null,
+    authViewModel: AuthViewModel = viewModel(),
+    userViewModel: UserViewModel = viewModel()
+) {
     val scrollState = rememberScrollState()
+
+    // États du profil
+    val currentUser by userViewModel.currentUser.collectAsState()
+    val authUser by authViewModel.userProfile.collectAsState()
+
+    // Utiliser le profil de l'auth ou celui du UserViewModel
+    val user = currentUser ?: authUser
+
+    // Charger le profil si nécessaire
+    LaunchedEffect(Unit) {
+        if (currentUser == null) {
+            userViewModel.loadProfile()
+        }
+    }
 
     Column(
         modifier = modifier
@@ -50,20 +75,37 @@ fun ProfileScreen(modifier: Modifier = Modifier) {
             ) {
                 // Photo de profil
                 Box {
-                    Image(
-                        painter = painterResource(R.drawable.creator_image),
-                        contentDescription = "Photo de profil",
-                        modifier = Modifier
-                            .size(100.dp)
-                            .clip(CircleShape)
-                            .border(
-                                4.dp,
-                                MaterialTheme.colorScheme.primary,
-                                CircleShape
-                            )
-                            .shadow(8.dp, CircleShape),
-                        contentScale = ContentScale.Crop
-                    )
+                    if (user?.profileImage != null) {
+                        AsyncImage(
+                            model = user.profileImage,
+                            contentDescription = "Photo de profil",
+                            modifier = Modifier
+                                .size(100.dp)
+                                .clip(CircleShape)
+                                .border(
+                                    4.dp,
+                                    MaterialTheme.colorScheme.primary,
+                                    CircleShape
+                                )
+                                .shadow(8.dp, CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Image(
+                            painter = painterResource(R.drawable.fi_rr_portrait),
+                            contentDescription = "Photo de profil",
+                            modifier = Modifier
+                                .size(100.dp)
+                                .clip(CircleShape)
+                                .border(
+                                    4.dp,
+                                    MaterialTheme.colorScheme.primary,
+                                    CircleShape
+                                )
+                                .shadow(0.dp, CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
 
                     // Badge edit
                     Surface(
@@ -87,14 +129,20 @@ fun ProfileScreen(modifier: Modifier = Modifier) {
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
-                    text = "Janeiro Hurley",
+                    text = user?.let {
+                        if (!it.firstName.isNullOrBlank() && !it.lastName.isNullOrBlank()) {
+                            "${it.firstName} ${it.lastName}"
+                        } else {
+                            it.username
+                        }
+                    } ?: "Utilisateur",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground
                 )
 
                 Text(
-                    text = "janeiro@email.com",
+                    text = user?.email ?: "",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
                 )
@@ -103,69 +151,95 @@ fun ProfileScreen(modifier: Modifier = Modifier) {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Statistiques
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            StatItem(number = "12", label = "Événements")
-            StatItem(number = "45", label = "Tickets")
-            StatItem(number = "8", label = "Favoris")
-        }
+        // TODO: Statistiques - nécessite endpoints API pour nombre d'événements, tickets, favoris
+        // Row(
+        //     modifier = Modifier
+        //         .fillMaxWidth()
+        //         .padding(horizontal = 24.dp),
+        //     horizontalArrangement = Arrangement.SpaceEvenly
+        // ) {
+        //     StatItem(number = "12", label = "Événements")
+        //     StatItem(number = "45", label = "Tickets")
+        //     StatItem(number = "8", label = "Favoris")
+        // }
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Section: Informations personnelles
         ProfileSection(title = "Informations personnelles") {
             ProfileInfoItem(
                 label = "Nom complet",
-                value = "Janeiro Hurley",
+                value = user?.let {
+                    if (!it.firstName.isNullOrBlank() && !it.lastName.isNullOrBlank()) {
+                        "${it.firstName} ${it.lastName}"
+                    } else if (!it.firstName.isNullOrBlank()) {
+                        it.firstName
+                    } else if (!it.lastName.isNullOrBlank()) {
+                        it.lastName
+                    } else {
+                        "Non renseigné"
+                    }
+                } ?: "Non renseigné",
                 onClick = { /* TODO */ }
             )
-            Divider(modifier = Modifier.padding(vertical = 8.dp))
+            HorizontalDivider(
+                modifier = Modifier.padding(vertical = 8.dp),
+                thickness = DividerDefaults.Thickness,
+                color = DividerDefaults.color.copy(alpha = 0.4f)
+            )
 
             ProfileInfoItem(
                 label = "Email",
-                value = "janeiro@email.com",
+                value = user?.email ?: "Non renseigné",
                 onClick = { /* TODO */ }
             )
-            Divider(modifier = Modifier.padding(vertical = 8.dp))
+            HorizontalDivider(
+                modifier = Modifier.padding(vertical = 8.dp),
+                thickness = DividerDefaults.Thickness,
+                color = DividerDefaults.color.copy(alpha = 0.4f)
+            )
 
             ProfileInfoItem(
                 label = "Téléphone",
-                value = "+257 79 123 456",
+                value = user?.phoneNumber ?: "Non renseigné",
                 onClick = { /* TODO */ }
             )
-            Divider(modifier = Modifier.padding(vertical = 8.dp))
+            HorizontalDivider(
+                modifier = Modifier.padding(vertical = 8.dp),
+                thickness = DividerDefaults.Thickness,
+                color = DividerDefaults.color.copy(alpha = 0.4f)
+            )
 
             ProfileInfoItem(
                 label = "Date de naissance",
-                value = "15 Mars 1995",
+                value = user?.dateOfBirth ?: "Non renseigné",
                 onClick = { /* TODO */ }
             )
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        // TODO: Section Préférences - nécessite endpoints API pour catégories favorites et langue
+        // Spacer(modifier = Modifier.height(16.dp))
+        //
+        // ProfileSection(title = "Préférences") {
+        //     ProfileInfoItem(
+        //         label = "Catégories favorites",
+        //         value = "Musique, Sport, Education",
+        //         onClick = { /* TODO */ }
+        //     )
+        //     HorizontalDivider(
+        //         modifier = Modifier.padding(vertical = 8.dp),
+        //         thickness = DividerDefaults.Thickness,
+        //         color = DividerDefaults.color.copy(alpha = 0.4f)
+        //     )
+        //
+        //     ProfileInfoItem(
+        //         label = "Langue",
+        //         value = "Français",
+        //         onClick = { /* TODO */ }
+        //     )
+        // }
 
-        // Section: Préférences
-        ProfileSection(title = "Préférences") {
-            ProfileInfoItem(
-                label = "Catégories favorites",
-                value = "Musique, Sport, Education",
-                onClick = { /* TODO */ }
-            )
-            Divider(modifier = Modifier.padding(vertical = 8.dp))
-
-            ProfileInfoItem(
-                label = "Langue",
-                value = "Français",
-                onClick = { /* TODO */ }
-            )
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
         // Bouton Modifier le profil
         Button(
@@ -187,6 +261,33 @@ fun ProfileScreen(modifier: Modifier = Modifier) {
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = "Modifier le profil",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Bouton Déconnexion
+        OutlinedButton(
+            onClick = { authViewModel.logout() },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .height(56.dp),
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = MaterialTheme.colorScheme.error
+            ),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.fi_rr_settings),
+                contentDescription = null,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "Déconnexion",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
@@ -235,12 +336,12 @@ private fun ProfileSection(
 
         Surface(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(10.dp),
             color = MaterialTheme.colorScheme.surface,
-            shadowElevation = 2.dp
+            shadowElevation = 1.dp
         ) {
             Column(
-                modifier = Modifier.padding(16.dp)
+                modifier = Modifier.padding(10.dp)
             ) {
                 content()
             }

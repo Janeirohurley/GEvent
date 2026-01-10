@@ -149,7 +149,7 @@ fun SettingScreen(modifier: Modifier = Modifier) {
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color(0xFFFF5252)
             ),
-            shape = RoundedCornerShape(12.dp)
+            shape = RoundedCornerShape(10.dp)
         ) {
             Text(
                 text = "Déconnexion",
@@ -182,9 +182,9 @@ private fun SettingSection(
 
         Surface(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(10.dp),
             color = MaterialTheme.colorScheme.surface,
-            shadowElevation = 2.dp
+            shadowElevation = 1.dp
         ) {
             Column(
                 modifier = Modifier.padding(16.dp)

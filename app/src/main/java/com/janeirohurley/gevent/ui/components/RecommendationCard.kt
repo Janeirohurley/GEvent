@@ -21,14 +21,16 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import com.janeirohurley.gevent.R
+import com.janeirohurley.gevent.utils.truncateByWords
 
 @Composable
 fun RecommendationCard(
     title: String,
     date: String,
     location: String,
-    imageRes: Int,
+    imageRes: Any, // Peut être Int (ressource locale) ou String (URL)
     isFree: Boolean = false,
     price: String? = null,
     onClick: () -> Unit,
@@ -52,15 +54,29 @@ fun RecommendationCard(
                 .padding(12.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Image à gauche avec coins arrondis
-            Image(
-                painter = painterResource(imageRes),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(100.dp)
-                    .clip(RoundedCornerShape(12.dp))
-            )
+            // Image à gauche avec coins arrondis - Support des images locales et réseau
+            when (imageRes) {
+                is Int -> {
+                    Image(
+                        painter = painterResource(imageRes),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .size(100.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                    )
+                }
+                is String -> {
+                    AsyncImage(
+                        model = imageRes,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .size(100.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                    )
+                }
+            }
 
             // Contenu à droite
             Column(
@@ -74,7 +90,8 @@ fun RecommendationCard(
                     Text(
                         text = title,
                         style = MaterialTheme.typography.titleMedium,
-                        maxLines = 2
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                     )
 
                     Spacer(modifier = Modifier.height(4.dp))
@@ -105,9 +122,11 @@ fun RecommendationCard(
                             modifier = Modifier.size(14.dp)
                         )
                         Text(
-                            text = location,
+                            text =  truncateByWords(location, maxWords = 2),
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                         )
                     }
 

@@ -52,13 +52,13 @@ sealed class NavigationItem(
         R.drawable.fi_rr_heart
     )
 
-
     object Setting : NavigationItem(
         "setting",
         "Setting",
         R.drawable.fi_rr_settings,
         R.drawable.fi_rr_settings
     )
+
     object Profile : NavigationItem(
         "profile",
         "Profil",
@@ -67,7 +67,17 @@ sealed class NavigationItem(
     )
 
     companion object {
-        val items = listOf(Home, Explore, Favorites, Setting,Profile)
+        // Bouton central pour la gestion d'événements
+        const val MANAGE_EVENTS_ROUTE = "manage_events"
+
+        // Items à gauche du bouton central
+        val leftItems = listOf(Home, Explore)
+
+        // Items à droite du bouton central
+        val rightItems = listOf(Favorites, Setting)
+
+        // Tous les items normaux (pour compatibilité)
+        val items = listOf(Home, Explore, Favorites, Setting, Profile)
     }
 }
 
@@ -80,26 +90,62 @@ fun BottomNavigationBar(
     onNavigate: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Surface(
-        modifier = modifier.fillMaxWidth() .height(72.dp),
-        color = MaterialTheme.colorScheme.surface,
-        shadowElevation = 8.dp
+    Box(
+        modifier = modifier.fillMaxWidth()
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 6.dp),
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.CenterVertically
+        Surface(
+            modifier = Modifier.fillMaxWidth().height(60.dp),
+            color = MaterialTheme.colorScheme.surface,
+            shadowElevation = 8.dp
         ) {
-            NavigationItem.items.forEach { item ->
-                BottomNavItem(
-                    item = item,
-                    isSelected = selectedRoute == item.route,
-                    onClick = { onNavigate(item.route) }
-                )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Items à gauche
+                Row(
+                    modifier = Modifier.weight(1f),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    NavigationItem.leftItems.forEach { item ->
+                        BottomNavItem(
+                            item = item,
+                            isSelected = selectedRoute == item.route,
+                            onClick = { onNavigate(item.route) }
+                        )
+                    }
+                }
+
+                // Spacer pour le bouton central
+                Spacer(modifier = Modifier.width(72.dp))
+
+                // Items à droite
+                Row(
+                    modifier = Modifier.weight(1f),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    NavigationItem.rightItems.forEach { item ->
+                        BottomNavItem(
+                            item = item,
+                            isSelected = selectedRoute == item.route,
+                            onClick = { onNavigate(item.route) }
+                        )
+                    }
+                }
             }
         }
+
+        // Bouton central flottant
+        FloatingManageButton(
+            isSelected = selectedRoute == NavigationItem.MANAGE_EVENTS_ROUTE,
+            onClick = { onNavigate(NavigationItem.MANAGE_EVENTS_ROUTE) },
+            modifier = Modifier.align(Alignment.TopCenter)
+        )
     }
 }
 
@@ -175,5 +221,69 @@ private fun BottomNavItem(
                 .align(Alignment.Center)
                 .size(26.dp)
         )
+    }
+}
+
+/* -----------------------------
+   Floating Central Manage Button
+------------------------------ */
+@Composable
+private fun FloatingManageButton(
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val backgroundColor by animateColorAsState(
+        targetValue = if (isSelected)
+            MaterialTheme.colorScheme.primary
+        else
+            MaterialTheme.colorScheme.primaryContainer,
+        animationSpec = tween(durationMillis = 200),
+        label = "backgroundColor"
+    )
+
+    val iconColor by animateColorAsState(
+        targetValue = if (isSelected)
+            MaterialTheme.colorScheme.onPrimary
+        else
+            MaterialTheme.colorScheme.onPrimaryContainer,
+        animationSpec = tween(durationMillis = 200),
+        label = "iconColor"
+    )
+
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.9f else 1f,
+        animationSpec = tween(durationMillis = 100),
+        label = "scale"
+    )
+
+    Surface(
+        modifier = modifier
+            .offset(y = (-20).dp)
+            .size(64.dp)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick
+            ),
+        shape = RoundedCornerShape(16.dp),
+        color = backgroundColor,
+        shadowElevation = 8.dp
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(4.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.fi_rr_calendar),
+                contentDescription = "Gérer événements",
+                tint = iconColor,
+                modifier = Modifier.size(28.dp)
+            )
+        }
     }
 }

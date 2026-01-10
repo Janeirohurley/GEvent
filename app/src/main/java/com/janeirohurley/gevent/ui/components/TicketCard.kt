@@ -65,7 +65,7 @@ fun TicketCard(
 
                 Card(
                     shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(
@@ -74,7 +74,7 @@ fun TicketCard(
                     ) {
                         Text("Scanner le QR", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                         Spacer(Modifier.height(6.dp))
-                        Text("Point this QR to the scan place", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+                        Text("Point this QR to the scan place", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
                         Spacer(Modifier.height(16.dp))
                         BoxWithConstraints {
                             val qrSize = maxWidth * 0.75f
@@ -88,7 +88,7 @@ fun TicketCard(
                         )
 
                         Spacer(Modifier.height(18.dp))
-                        Text(ticket.code.uppercase(), fontWeight = FontWeight.Bold, fontSize = 20.sp, color = MaterialTheme.colorScheme.primary, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+                        Text(ticket.code.uppercase(), fontWeight = FontWeight.Bold, fontSize = 20.sp, color = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f), modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
                         Spacer(Modifier.height(12.dp))
                         InfoRow("Nom", ticket.holderName)
                         ticket.seat?.let { InfoRow("Place", it) }

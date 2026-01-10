@@ -11,11 +11,13 @@ import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
@@ -39,7 +41,15 @@ import com.janeirohurley.gevent.ui.screen.ViewTicket
 import com.janeirohurley.gevent.model.TicketModel
 import com.janeirohurley.gevent.ui.screen.ProfileScreen
 import com.janeirohurley.gevent.ui.screen.SettingScreen
+import com.janeirohurley.gevent.ui.screen.LoginScreen
+import com.janeirohurley.gevent.ui.screen.RegisterScreen
+import com.janeirohurley.gevent.ui.screen.ManageEventsScreen
 import com.janeirohurley.gevent.ui.theme.GEventTheme
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.janeirohurley.gevent.viewmodel.AuthViewModel
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Text
+import androidx.compose.ui.Alignment
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -57,6 +67,10 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MainScreen() {
+    val authViewModel: AuthViewModel = viewModel()
+    val isCheckingAuth by authViewModel.isCheckingAuth.collectAsState()
+    val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
+
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route ?: Screen.Home.route
@@ -64,87 +78,168 @@ fun MainScreen() {
         com.janeirohurley.gevent.ui.components.NavigationItem.items.map { it.route }
     }
 
+    // Gérer la redirection en fonction de l'état d'authentification
+    LaunchedEffect(isCheckingAuth, isAuthenticated) {
+        if (!isCheckingAuth) {
+            val currentDest = navController.currentBackStackEntry?.destination?.route
+            if (isAuthenticated && (currentDest == "login" || currentDest == "register")) {
+                navController.navigate(Screen.Home.route) {
+                    popUpTo("login") { inclusive = true }
+                    launchSingleTop = true
+                }
+            } else if (!isAuthenticated && currentDest !in listOf("login", "register")) {
+                navController.navigate("login") {
+                    popUpTo(0) { inclusive = true }
+                    launchSingleTop = true
+                }
+            }
+        }
+    }
+
+    // Afficher un écran de chargement pendant la vérification
+    if (isCheckingAuth) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             if (currentRoute in mainRoutes) {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    BottomNavigationBar(
-                        selectedRoute = currentRoute,
-                        onNavigate = { route ->
-                            // Optimisation: Navigation ultra-rapide avec cache d'état
-                            if (currentRoute != route) {
-                                navController.navigate(route) {
-                                    popUpTo(Screen.Home.route) {
-                                        saveState = true
-                                    }
-                                    launchSingleTop = true
-                                    restoreState = true
+                BottomNavigationBar(
+                    selectedRoute = currentRoute,
+                    onNavigate = { route ->
+                        // Optimisation: Navigation ultra-rapide avec cache d'état
+                        if (currentRoute != route) {
+                            navController.navigate(route) {
+                                popUpTo(Screen.Home.route) {
+                                    saveState = true
                                 }
+                                launchSingleTop = true
+                                restoreState = true
                             }
-                        },
-                        modifier = Modifier
-                    )
-                    // Fond sous la barre système pour continuité visuelle
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .navigationBarsPadding()
-                            .height(24.dp)
-                            .background(MaterialTheme.colorScheme.surface)
-                    )
-                }
+                        }
+                    },
+                    modifier = Modifier.navigationBarsPadding()
+                )
             }
         }
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = Screen.Home.route,
+            startDestination = if (isAuthenticated) Screen.Home.route else "login",
             modifier = Modifier.padding(innerPadding),
             // Transitions ULTRA-RAPIDES: 150ms avec fade simple
             enterTransition = {
-                fadeIn(animationSpec = tween(150))
+                fadeIn(animationSpec = tween(350))
             },
             exitTransition = {
-                fadeOut(animationSpec = tween(100))
+                fadeOut(animationSpec = tween(250))
             },
             popEnterTransition = {
-                fadeIn(animationSpec = tween(150))
+                fadeIn(animationSpec = tween(300))
             },
             popExitTransition = {
-                fadeOut(animationSpec = tween(100))
+                fadeOut(animationSpec = tween(200))
             }
         ) {
+            // Écrans d'authentification
+            composable("login") {
+                LoginScreen(navController = navController)
+            }
+            composable("register") {
+                RegisterScreen(navController = navController)
+            }
+
+            // Écrans principaux
             composable(Screen.Home.route) {
                 HomeScreen(navController = navController)
             }
             composable(Screen.Ticket.route) {
                 TicketsScreen(navController = navController)
             }
-            composable(Screen.viewTicket.route) {
-                // Ticket simulé pour la démo
-                val ticket = TicketModel(
-                    code = "ABC123456",
-                    eventTitle = "Soirée Networking Paris 2024 burundi",
-                    eventDate = "5 janvier 2026, 19:00",
-                    eventLocation = "Grand Palais, Bujumbura",
-                    holderName = "Jean Dupont",
-                    seat = "A12",
-                    price = "2000 Fbu",
-                    purchaseDate = "2 janvier 2026",
-                    qrCode = null
-                )
-                ViewTicket(ticket = ticket, onBack ={navController.popBackStack()})
+            composable("manage_events") {
+                ManageEventsScreen(navController = navController)
+            }
+            composable("view_ticket/{ticketId}") { backStackEntry ->
+                val ticketId = backStackEntry.arguments?.getString("ticketId") ?: ""
+                val ticketViewModel: com.janeirohurley.gevent.viewmodel.TicketViewModel = viewModel()
+
+                // Charger le ticket spécifique
+                LaunchedEffect(ticketId) {
+                    ticketViewModel.loadMyTickets() // Charge tous les tickets
+                }
+
+                // Récupérer les tickets
+                val tickets by ticketViewModel.tickets.collectAsState()
+                val isLoading by ticketViewModel.isLoading.collectAsState()
+
+                // Trouver le ticket correspondant
+                val ticket = tickets.find { it.id == ticketId }?.let {
+                    TicketModel(
+                        code = it.code,
+                        eventTitle = it.event.title,
+                        eventDate = com.janeirohurley.gevent.utils.DateUtils.formatDateFromString(
+                            it.event.date,
+                            inputPattern = "yyyy-MM-dd'T'HH:mm:ss",
+                            outputPattern = "dd MMMM yyyy, HH:mm"
+                        ) ?: it.event.date,
+                        eventLocation = it.event.location ?: "Non spécifié",
+                        holderName = it.holderName,
+                        seat = it.seat,
+                        price = it.price,
+                        purchaseDate = com.janeirohurley.gevent.utils.DateUtils.formatDateFromString(
+                            it.purchaseDate,
+                            inputPattern = "yyyy-MM-dd'T'HH:mm:ss",
+                            outputPattern = "dd MMMM yyyy"
+                        ) ?: it.purchaseDate,
+                        qrCode = it.qrCode
+                    )
+                }
+
+                if (ticket != null) {
+                    ViewTicket(ticket = ticket, onBack = { navController.popBackStack() })
+                } else if (isLoading) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                } else {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("Ticket non trouvé")
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Button(onClick = { navController.popBackStack() }) {
+                                Text("Retour")
+                            }
+                        }
+                    }
+                }
             }
             composable(Screen.Favorites.route) {
-                FavoriteScreen()
+                FavoriteScreen(navController = navController)
             }
             composable(Screen.Setting.route) {
                 SettingScreen()
             }
             composable(Screen.Profile.route) {
-                ProfileScreen()
+                ProfileScreen(
+                    navController = navController,
+                    authViewModel = authViewModel
+                )
             }
             composable(Screen.CancelBooking.route) {
                 CancelBookingScreen(
@@ -161,56 +256,106 @@ fun MainScreen() {
                     }
                 )
             }
-            composable(Screen.EventDetails.route) {
-                // Exemple d'EventUiModel fictif pour la démo
-                val event = com.janeirohurley.gevent.viewmodel.EventUiModel(
-                    id = "1",
-                    title = "Soirée Networking Paris 2024 burundi",
-                    date = "5 janvier 2026, 19:00",
-                    imageRes = R.drawable.event_image, // Remplace par une ressource valide
-                    isFavorite = false,
-                    creatorImageRes = R.drawable.creator_image, // Remplace par une ressource valide
-                    creatorName = "Jean Dupont",
-                    joinedAvatars = listOf(
-                        R.drawable.creator_image,
-                        R.drawable.event_image,
+            composable("event_details/{eventId}") { backStackEntry ->
+                val eventId = backStackEntry.arguments?.getString("eventId") ?: "1"
+                val eventViewModel: com.janeirohurley.gevent.viewmodel.EventViewModel = viewModel()
 
-                    ),
-                    isFree = false,
-                    price = "2000 Fbu"
-                )
-                EventDetailsScreen(navController = navController, event = event)
-            }
+                // Charger l'événement spécifique
+                LaunchedEffect(eventId) {
+                    eventViewModel.loadEventById(eventId)
+                }
 
-            composable(Screen.Order.route) {
-                // Exemple d'EventUiModel fictif pour la démo
-                val event = com.janeirohurley.gevent.viewmodel.EventUiModel(
-                    id = "1",
-                    title = "Soirée Networking Paris 2024 burundi",
-                    date = "5 janvier 2026, 19:00",
-                    imageRes = R.drawable.event_image, // Remplace par une ressource valide
-                    isFavorite = false,
-                    creatorImageRes = R.drawable.creator_image, // Remplace par une ressource valide
-                    creatorName = "Jean Dupont",
-                    joinedAvatars = listOf(
-                        R.drawable.creator_image,
-                        R.drawable.event_image,
+                // Récupérer l'événement depuis le ViewModel
+                val currentEvent by eventViewModel.currentEvent.collectAsState()
+                val isLoading by eventViewModel.isLoading.collectAsState()
 
-                        ),
-                    isFree = false,
-                    price = "2000 Fbu"
-                )
-                OrderScreen(
-                    onBack = { navController.popBackStack() },
-                    event = event,
-                    onViewTicket = { navController.navigate("view_ticket") },
-                    onGoHome = {
-                        navController.navigate(Screen.Home.route) {
-                            popUpTo(Screen.Home.route) { inclusive = true }
-                            launchSingleTop = true
+                // Convertir en EventUiModel si trouvé
+                val event = currentEvent?.let {
+                    com.janeirohurley.gevent.utils.DataMapper.run { it.toUiModel() }
+                }
+
+                if (event != null) {
+                    EventDetailsScreen(navController = navController, event = event)
+                } else if (isLoading) {
+                    // Afficher un indicateur de chargement
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                } else {
+                    // Afficher un message d'erreur
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("Événement non trouvé")
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Button(onClick = { navController.popBackStack() }) {
+                                Text("Retour")
+                            }
                         }
                     }
-                )
+                }
+            }
+
+            composable("order/{eventId}") { backStackEntry ->
+                val eventId = backStackEntry.arguments?.getString("eventId") ?: "1"
+                val eventViewModel: com.janeirohurley.gevent.viewmodel.EventViewModel = viewModel()
+
+                // Charger l'événement spécifique
+                LaunchedEffect(eventId) {
+                    eventViewModel.loadEventById(eventId)
+                }
+
+                // Récupérer l'événement depuis le ViewModel
+                val currentEvent by eventViewModel.currentEvent.collectAsState()
+                val isLoading by eventViewModel.isLoading.collectAsState()
+
+                // Convertir en EventUiModel si trouvé
+                val event = currentEvent?.let {
+                    com.janeirohurley.gevent.utils.DataMapper.run { it.toUiModel() }
+                }
+
+                if (event != null) {
+                    OrderScreen(
+                        onBack = { navController.popBackStack() },
+                        event = event,
+                        onViewTicket = { ticketId ->
+                            navController.navigate("view_ticket/$ticketId")
+                        },
+                        onGoHome = {
+                            navController.navigate(Screen.Home.route) {
+                                popUpTo(Screen.Home.route) { inclusive = true }
+                                launchSingleTop = true
+                            }
+                        }
+                    )
+                } else if (isLoading) {
+                    // Afficher un indicateur de chargement
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                } else {
+                    // Afficher un message d'erreur
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("Événement non trouvé")
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Button(onClick = { navController.popBackStack() }) {
+                                Text("Retour")
+                            }
+                        }
+                    }
+                }
             }
         }
     }

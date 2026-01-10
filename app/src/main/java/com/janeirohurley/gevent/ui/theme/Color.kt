@@ -12,9 +12,9 @@ val Pink40 = Color(0xFF7D5260)
 
 // Couleurs personnalisées GEvent
 val BackgroundLight = Color(0xFFF7F7F7)
-val BackgroundDark = Color(0xFF131325)
+val BackgroundDark = Color(0xFF25131a)
 val CardLight = Color(0xFFFFFFFF)
-val CardDark = Color(0xF225131A)
+val CardDark = Color(0xFF2a1920)
 
 var accentColor = Color(0xFFFB2097)
 

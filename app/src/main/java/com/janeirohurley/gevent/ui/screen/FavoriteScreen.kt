@@ -1,122 +1,134 @@
 package com.janeirohurley.gevent.ui.screen
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import com.janeirohurley.gevent.R
 import com.janeirohurley.gevent.ui.components.RecommendationCard
+import com.janeirohurley.gevent.ui.components.RecommendationCardSkeleton
+import com.janeirohurley.gevent.ui.components.EmptyEventsState
+import com.janeirohurley.gevent.viewmodel.EventViewModel
+import com.janeirohurley.gevent.utils.DataMapper.toUiModelList
+import com.janeirohurley.gevent.utils.DateFormatter
 
 
 @Composable
-fun FavoriteScreen(modifier: Modifier = Modifier){
+fun FavoriteScreen(
+    modifier: Modifier = Modifier,
+    navController: NavHostController,
+    viewModel: EventViewModel = viewModel()
+) {
+    // États du ViewModel
+    val favoriteEvents by viewModel.favoriteEvents.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val error by viewModel.error.collectAsState()
+
+    // Charger les favoris au démarrage
+    LaunchedEffect(Unit) {
+        viewModel.loadFavorites()
+    }
+
+    // Convertir les événements API en EventUiModel
+    val favoritesUi = remember(favoriteEvents) {
+        try {
+            favoriteEvents.toUiModelList()
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
+        // En-tête
         Row(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 16.dp, horizontal = 16.dp),
             horizontalArrangement = Arrangement.Center
-        ){
-            Text("Favorites",
+        ) {
+            Text(
+                "Favoris",
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold )
+                fontWeight = FontWeight.Bold
+            )
         }
 
+        // Gestion des états de chargement et d'erreur
+        when {
+            // État de chargement
+            isLoading && favoritesUi.isEmpty() -> {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    repeat(5) {
+                        RecommendationCardSkeleton()
+                    }
+                }
+            }
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-        ) {
-            // Liste verticale de recommandations
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                RecommendationCard(
-                    title = "Festival de Musique 2026",
-                    date = "SAT 15 Mai 2026, 18:00",
-                    location = "Bujumbura",
-                    imageRes = R.drawable.event_image,
-                    isFree = false,
-                    price = "2.000 BIF",
-                    onClick = { println("Festival de Musique clicked") } ,
+            // État d'erreur ou liste vide
+            !isLoading && favoritesUi.isEmpty() -> {
+                EmptyEventsState(
+                    message = if (error != null) {
+                        "Impossible de charger vos favoris\n$error"
+                    } else {
+                        "Aucun événement favori\nAjoutez des événements à vos favoris pour les retrouver ici"
+                    },
+                    onRefresh = if (error != null) {
+                        { viewModel.loadFavorites() }
+                    } else null,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
 
+            // Liste des favoris
+            else -> {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        favoritesUi.forEach { event ->
+                            RecommendationCard(
+                                title = event.title,
+                                date = DateFormatter.formatDate(event.date),
+                                location = event.location ?: "Burundi",
+                                imageRes = event.imageRes,
+                                isFree = event.isFree,
+                                price = event.price ?: "Gratuit",
+                                onClick = {
+                                    navController.navigate("event_details/${event.id}")
+                                }
+                            )
+                        }
 
-                )
-
-                RecommendationCard(
-                    title = "Concert Live Rock",
-                    date = "FRI 20 Juin 2026, 20:00",
-                    location = "Gitega",
-                    imageRes = R.drawable.creator_image,
-                    isFree = false,
-                    price = "5.000 BIF",
-                    onClick = { println("Concert Live Rock clicked") }
-                )
-
-                RecommendationCard(
-                    title = "Théâtre Moderne",
-                    date = "WED 10 Juillet 2026, 19:30",
-                    location = "Bujumbura",
-                    imageRes = R.drawable.event_image,
-                    isFree = true,
-                    onClick = { println("Théâtre Moderne clicked") }
-                )
-                RecommendationCard(
-                    title = "Théâtre Moderne",
-                    date = "WED 10 Juillet 2026, 19:30",
-                    location = "Bujumbura",
-                    imageRes = R.drawable.event_image,
-                    isFree = true,
-                    onClick = { println("Théâtre Moderne clicked") }
-                )
-                RecommendationCard(
-                    title = "Théâtre Moderne",
-                    date = "WED 10 Juillet 2026, 19:30",
-                    location = "Bujumbura",
-                    imageRes = R.drawable.event_image,
-                    isFree = true,
-                    onClick = { println("Théâtre Moderne clicked") }
-                )
-                RecommendationCard(
-                    title = "Théâtre Moderne",
-                    date = "WED 10 Juillet 2026, 19:30",
-                    location = "Bujumbura",
-                    imageRes = R.drawable.event_image,
-                    isFree = true,
-                    onClick = { println("Théâtre Moderne clicked") }
-                )
-                RecommendationCard(
-                    title = "Théâtre Moderne",
-                    date = "WED 10 Juillet 2026, 19:30",
-                    location = "Bujumbura",
-                    imageRes = R.drawable.event_image,
-                    isFree = true,
-                    onClick = { println("Théâtre Moderne clicked") }
-                )
+                        // Espacement en bas
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+                }
             }
         }
     }

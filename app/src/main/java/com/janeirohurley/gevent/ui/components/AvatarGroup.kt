@@ -20,11 +20,12 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import coil.compose.AsyncImage
 
 
 @Composable
 fun AvatarGroup(
-    images: List<Int>,
+    images: List<Any>, // Peut contenir Int (ressources locales) ou String (URLs)
     avatarSize: Dp = 32.dp,
     overlap: Dp = 10.dp,
     maxVisible: Int? = null // null = afficher tous, sinon limiter à ce nombre
@@ -54,18 +55,37 @@ fun AvatarGroup(
             displayImages.reversed().forEachIndexed { index, imageRes ->
                 val isLastAvatar = index == displayImages.size-1  && shouldShowBadge
 
-                Image(
-                    painter = painterResource(imageRes),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .size(avatarSize)
-                        .offset(x = (-overlap * index))
-                        .zIndex(index.toFloat()) // Le dernier (à droite) a le z-index le plus élevé
-                        .clip(CircleShape)
-                        .background(Color.White, CircleShape)
-                        .border(1.dp, MaterialTheme.colorScheme.surface, CircleShape)
-                )
+                // Support des images locales et réseau
+                when (imageRes) {
+                    is Int -> {
+                        Image(
+                            painter = painterResource(imageRes),
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .size(avatarSize)
+                                .offset(x = (-overlap * index))
+                                .zIndex(index.toFloat())
+                                .clip(CircleShape)
+                                .background(Color.White, CircleShape)
+                                .border(1.dp, MaterialTheme.colorScheme.surface, CircleShape)
+                        )
+                    }
+                    is String -> {
+                        AsyncImage(
+                            model = imageRes,
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .size(avatarSize)
+                                .offset(x = (-overlap * index))
+                                .zIndex(index.toFloat())
+                                .clip(CircleShape)
+                                .background(Color.White, CircleShape)
+                                .border(1.dp, MaterialTheme.colorScheme.surface, CircleShape)
+                        )
+                    }
+                }
                 // Afficher le badge "+N" SUPERPOSÉ sur le dernier avatar
                 if (shouldShowBadge && isLastAvatar) {
                     Box(

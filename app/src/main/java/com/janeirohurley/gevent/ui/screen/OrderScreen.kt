@@ -1,7 +1,9 @@
 package com.janeirohurley.gevent.ui.screen
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,8 +18,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -34,8 +38,11 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.janeirohurley.gevent.R
 import com.janeirohurley.gevent.viewmodel.EventUiModel
+import com.janeirohurley.gevent.viewmodel.TicketViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -44,8 +51,9 @@ fun OrderScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     event: EventUiModel,
-    onViewTicket: (() -> Unit)? = null,
-    onGoHome: (() -> Unit)? = null
+    onViewTicket: ((String) -> Unit)? = null,
+    onGoHome: (() -> Unit)? = null,
+    viewModel: TicketViewModel = viewModel()
 ){
     var ticketCount by remember { mutableStateOf(1) }
     val pricePerTicket = event.price?.replace("€","")?.replace("Fbu","")?.trim()?.toFloatOrNull() ?: 0f
@@ -53,8 +61,49 @@ fun OrderScreen(
     val tax = subtotal * 0.10f
     val total = subtotal + tax
     var selectedPayment by remember { mutableStateOf("Gasape Cash") }
-    var showSuccess by remember { mutableStateOf(false) }
-    var showError by remember { mutableStateOf(false) }
+
+    // Observer les états du ViewModel
+    val isLoading by viewModel.isLoading.collectAsState()
+    val error by viewModel.error.collectAsState()
+    val bookingSuccess by viewModel.bookingSuccess.collectAsState()
+
+    // État pour afficher le dialogue de succès
+    var showSuccessDialog by remember { mutableStateOf(false) }
+    var bookedTicketId by remember { mutableStateOf<String?>(null) }
+
+    // Observer le succès de la réservation
+    LaunchedEffect(bookingSuccess) {
+        bookingSuccess?.let { booking ->
+            try {
+                Log.d("ORDER_DEBUG", "========== BOOKING SUCCESS ==========")
+                Log.d("ORDER_DEBUG", "Order ID: ${booking.id}")
+                Log.d("ORDER_DEBUG", "Order Number: ${booking.orderNumber}")
+                Log.d("ORDER_DEBUG", "Number of tickets: ${booking.tickets.size}")
+
+                // Récupérer le premier ticket (utilise le helper ou directement la liste)
+                val firstTicket = booking.ticket ?: booking.tickets.firstOrNull()
+
+                if (firstTicket != null) {
+                    bookedTicketId = firstTicket.id
+                    Log.d("ORDER_DEBUG", "First ticket ID: ${firstTicket.id}")
+                    Log.d("ORDER_DEBUG", "Ticket code: ${firstTicket.code}")
+                    showSuccessDialog = true
+                } else {
+                    Log.e("ORDER_ERROR", "No tickets in booking response!")
+                    Log.e("ORDER_ERROR", "Booking response: $booking")
+                    // Afficher quand même le dialogue mais sans ID de ticket
+                    showSuccessDialog = true
+                }
+                Log.d("ORDER_DEBUG", "====================================")
+                viewModel.clearBookingSuccess()
+            } catch (e: Exception) {
+                Log.e("ORDER_ERROR", "Error processing booking success", e)
+                // Afficher le dialogue même en cas d'erreur
+                showSuccessDialog = true
+                viewModel.clearBookingSuccess()
+            }
+        }
+    }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -83,29 +132,49 @@ fun OrderScreen(
         bottomBar = {
             Button(
                 onClick = {
-                    // Simulation succès/erreur
-                    if (ticketCount > 0) {
-                        showSuccess = true
-                    } else {
-                        showError = true
-                    }
+                    // DEBUG: Afficher les données avant l'envoi
+                    val paymentMethodFormatted = selectedPayment.lowercase().replace(" ", "_")
+                    Log.d("ORDER_DEBUG", "========== ORDER SCREEN DEBUG ==========")
+                    Log.d("ORDER_DEBUG", "Event ID: ${event.id}")
+                    Log.d("ORDER_DEBUG", "Event Title: ${event.title}")
+                    Log.d("ORDER_DEBUG", "Ticket Count: $ticketCount")
+                    Log.d("ORDER_DEBUG", "Selected Payment: $selectedPayment")
+                    Log.d("ORDER_DEBUG", "Payment Method Formatted: $paymentMethodFormatted")
+                    Log.d("ORDER_DEBUG", "Price per ticket: $pricePerTicket")
+                    Log.d("ORDER_DEBUG", "Total: $total")
+                    Log.d("ORDER_DEBUG", "=========================================")
+
+                    // Appeler le ViewModel pour réserver le ticket
+                    viewModel.bookTicket(
+                        eventId = event.id,
+                        quantity = ticketCount,
+                        paymentMethod = paymentMethodFormatted,
+                        seatNumber = null
+                    )
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp)
                     .height(50.dp),
                 shape = RoundedCornerShape(10.dp),
-                enabled = ticketCount > 0
+                enabled = ticketCount > 0 && !isLoading
             ) {
-                Text("Passer la commande")
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                } else {
+                    Text("Passer la commande")
+                }
             }
         },
         modifier = modifier.fillMaxSize()
     ){paddingValues ->
-        // Popups de succès ou d'erreur
-        if (showSuccess) {
+        // Dialogue de succès
+        if (showSuccessDialog) {
             androidx.compose.material3.AlertDialog(
-                onDismissRequest = { showSuccess = false },
+                onDismissRequest = { showSuccessDialog = false },
                 title = {
                     Column(
                         modifier = Modifier.fillMaxWidth(),
@@ -131,20 +200,26 @@ fun OrderScreen(
                 },
                 confirmButton = {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Button(
-                            onClick = {
-                                showSuccess = false
-                                onViewTicket?.invoke()
-                            },
-                            shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text("Voir le ticket")
+                        // Bouton "Voir le ticket" seulement si on a un ID de ticket
+                        if (bookedTicketId != null) {
+                            Button(
+                                onClick = {
+                                    showSuccessDialog = false
+                                    bookedTicketId?.let { ticketId ->
+                                        Log.d("ORDER_DEBUG", "Navigating to ticket: $ticketId")
+                                        onViewTicket?.invoke(ticketId)
+                                    }
+                                },
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text("Voir le ticket")
+                            }
+                            Spacer(Modifier.height(8.dp))
                         }
-                        Spacer(Modifier.height(8.dp))
                         Button(
                             onClick = {
-                                showSuccess = false
+                                showSuccessDialog = false
                                 onGoHome?.invoke()
                             },
                             shape = RoundedCornerShape(8.dp),
@@ -157,14 +232,46 @@ fun OrderScreen(
                 shape = RoundedCornerShape(14.dp)
             )
         }
-        if (showError) {
+
+        // Dialogue d'erreur
+        if (error != null) {
             androidx.compose.material3.AlertDialog(
-                onDismissRequest = { showError = false },
-                title = { Text("Erreur", fontWeight = FontWeight.Bold) },
-                text = { Text("Une erreur est survenue lors de la commande. Veuillez réessayer.") },
+                onDismissRequest = { viewModel.clearError() },
+                title = {
+                    Text("Erreur de réservation", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error)
+                },
+                text = {
+                    Column {
+                        Text(
+                            text = error ?: "Une erreur est survenue lors de la commande. Veuillez réessayer.",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            text = "Code erreur: ${error?.substringBefore(":") ?: "Inconnu"}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error.copy(alpha = 0.8f),
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = "Consultez les logs (Logcat) pour plus de détails.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                        )
+                    }
+                },
                 confirmButton = {
-                    Button(onClick = { showError = false }) { Text("OK") }
-                }
+                    Button(
+                        onClick = { viewModel.clearError() },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error
+                        )
+                    ) {
+                        Text("OK")
+                    }
+                },
+                shape = RoundedCornerShape(14.dp)
             )
         }
         Column( modifier = Modifier
@@ -189,15 +296,29 @@ fun OrderScreen(
                         .padding(12.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // Image à gauche avec coins arrondis
-                    Image(
-                        painter = painterResource(event.imageRes),
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .size(100.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                    )
+                    // Image à gauche avec coins arrondis - Support des images locales et réseau
+                    when (event.imageRes) {
+                        is Int -> {
+                            Image(
+                                painter = painterResource(event.imageRes),
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .size(100.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                            )
+                        }
+                        is String -> {
+                            AsyncImage(
+                                model = event.imageRes,
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .size(100.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                            )
+                        }
+                    }
 
                     // Contenu à droite
                     Column(
@@ -216,21 +337,25 @@ fun OrderScreen(
                             )
                         Spacer(modifier = Modifier.height(4.dp))
                         // Lieu
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                painter = painterResource(R.drawable.fi_rr_marker),
-                                contentDescription = "Lieu",
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Spacer(Modifier.width(6.dp))
-                            Text(
-                                text = "Grand Palais, Paris", // À remplacer par event.location si dispo
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
+                        if (event.location != null) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    painter = painterResource(R.drawable.fi_rr_marker),
+                                    contentDescription = "Lieu",
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(Modifier.width(6.dp))
+                                Text(
+                                    text = event.location,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    maxLines = 1,
+                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                )
+                            }
+                            Spacer(Modifier.height(8.dp))
                         }
-                        Spacer(Modifier.height(8.dp))
 
                         // Date/heure
                         Row(verticalAlignment = Alignment.CenterVertically) {
