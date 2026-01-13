@@ -89,7 +89,8 @@ fun EventDetailsScreen(
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        fontSize = 16.sp
                     )
 
                 }
@@ -108,13 +109,14 @@ fun EventDetailsScreen(
                                 painter = painterResource(R.drawable.fi_rr_marker),
                                 contentDescription = "Lieu",
                                 tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(16.dp)
                             )
                             Spacer(Modifier.width(6.dp))
                             Text(
                                 text = event.location ?: "Lieu non spécifié",
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontSize = 12.sp
                             )
                         }
                         Spacer(Modifier.height(8.dp))
@@ -125,13 +127,14 @@ fun EventDetailsScreen(
                                 painter = painterResource(R.drawable.fi_rr_calendar) ,
                                 contentDescription = "Date",
                                 tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(16.dp)
                             )
                             Spacer(Modifier.width(6.dp))
                             Text(
                                 text = event.date,
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontSize = 12.sp
                             )
                         }
 
@@ -272,7 +275,7 @@ fun EventDetailsScreen(
                     .padding(horizontal = 24.dp, vertical = 24.dp),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text(text = "Acheter un ticket", style = MaterialTheme.typography.titleMedium)
+                Text(text = "Acheter un ticket", style = MaterialTheme.typography.titleMedium, fontSize = 13.sp)
             }
         }
     }

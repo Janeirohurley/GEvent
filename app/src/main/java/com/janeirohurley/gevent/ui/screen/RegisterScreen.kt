@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.janeirohurley.gevent.R
+import com.janeirohurley.gevent.ui.components.CustomInput
 import com.janeirohurley.gevent.viewmodel.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -88,8 +89,8 @@ fun RegisterScreen(
                 painter = painterResource(id = R.drawable.logo1),
                 contentDescription = "GEvent Logo",
                 modifier = Modifier
-                    .size(100.dp)
-                    .padding(bottom = 24.dp)
+                    .size(200.dp)
+                    .padding(bottom = 20.dp)
             )
 
             // Titre
@@ -111,169 +112,107 @@ fun RegisterScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             // Champ Nom d'utilisateur (obligatoire)
-            OutlinedTextField(
+            CustomInput(
                 value = username,
                 onValueChange = { username = it },
-                label = { Text("Nom d'utilisateur *") },
-                placeholder = { Text("Choisissez un nom d'utilisateur") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 6.dp),
-                shape = RoundedCornerShape(14.dp),
-                singleLine = true,
-                enabled = !isLoading,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Text,
-                    imeAction = ImeAction.Next
-                ),
-                keyboardActions = KeyboardActions(
-                    onNext = { focusManager.moveFocus(FocusDirection.Down) }
-                ),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-                )
+                placeholder = "Nom d'utilisateur *",
+                height = 50.dp
             )
+
+            Spacer(modifier = Modifier.height(12.dp))
 
             // Champ Email (obligatoire)
-            OutlinedTextField(
+            CustomInput(
                 value = email,
                 onValueChange = { email = it },
-                label = { Text("Email *") },
-                placeholder = { Text("votre@email.com") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 6.dp),
-                shape = RoundedCornerShape(14.dp),
-                singleLine = true,
-                enabled = !isLoading,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Email,
-                    imeAction = ImeAction.Next
-                ),
-                keyboardActions = KeyboardActions(
-                    onNext = { focusManager.moveFocus(FocusDirection.Down) }
-                ),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-                )
+                placeholder = "Email *",
+                height = 50.dp
             )
+
+            Spacer(modifier = Modifier.height(12.dp))
 
             // Champ Prénom (optionnel)
-            OutlinedTextField(
+            CustomInput(
                 value = firstName,
                 onValueChange = { firstName = it },
-                label = { Text("Prénom") },
-                placeholder = { Text("Votre prénom") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 6.dp),
-                shape = RoundedCornerShape(14.dp),
-                singleLine = true,
-                enabled = !isLoading,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Text,
-                    imeAction = ImeAction.Next
-                ),
-                keyboardActions = KeyboardActions(
-                    onNext = { focusManager.moveFocus(FocusDirection.Down) }
-                ),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-                )
+                placeholder = "Prénom",
+                height = 50.dp
             )
+
+            Spacer(modifier = Modifier.height(12.dp))
 
             // Champ Nom (optionnel)
-            OutlinedTextField(
+            CustomInput(
                 value = lastName,
                 onValueChange = { lastName = it },
-                label = { Text("Nom") },
-                placeholder = { Text("Votre nom") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 6.dp),
-                shape = RoundedCornerShape(14.dp),
-                singleLine = true,
-                enabled = !isLoading,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Text,
-                    imeAction = ImeAction.Next
-                ),
-                keyboardActions = KeyboardActions(
-                    onNext = { focusManager.moveFocus(FocusDirection.Down) }
-                ),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-                )
+                placeholder = "Nom",
+                height = 50.dp
             )
+
+            Spacer(modifier = Modifier.height(12.dp))
 
             // Champ Téléphone (optionnel)
-            OutlinedTextField(
+            CustomInput(
                 value = phoneNumber,
                 onValueChange = { phoneNumber = it },
-                label = { Text("Téléphone") },
-                placeholder = { Text("+257 XX XX XX XX") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 6.dp),
-                shape = RoundedCornerShape(14.dp),
-                singleLine = true,
-                enabled = !isLoading,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Phone,
-                    imeAction = ImeAction.Next
-                ),
-                keyboardActions = KeyboardActions(
-                    onNext = { focusManager.moveFocus(FocusDirection.Down) }
-                ),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-                )
+                placeholder = "Téléphone",
+                height = 50.dp
             )
 
-            // Champ Mot de passe (obligatoire)
-            OutlinedTextField(
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Champ Mot de passe
+            CustomInput(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text("Mot de passe *") },
-                placeholder = { Text("Minimum 6 caractères") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 6.dp),
-                shape = RoundedCornerShape(14.dp),
-                singleLine = true,
-                enabled = !isLoading,
-                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password,
-                    imeAction = ImeAction.Next
-                ),
-                keyboardActions = KeyboardActions(
-                    onNext = { focusManager.moveFocus(FocusDirection.Down) }
-                ),
-                trailingIcon = {
+                placeholder = "Mot de passe *",
+                height = 50.dp,
+                isPassword = true,
+                passwordVisible = passwordVisible,
+                suffix = {
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
                             painter = painterResource(
-                                id = if (passwordVisible) R.drawable.fi_rr_eye else R.drawable.fi_rr_eye_crossed
+                                if (passwordVisible)
+                                    R.drawable.fi_rr_eye
+                                else
+                                    R.drawable.fi_rr_eye_crossed
                             ),
-                            contentDescription = if (passwordVisible) "Masquer le mot de passe" else "Afficher le mot de passe",
-                            modifier = Modifier.size(20.dp)
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                            tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.3f)
                         )
                     }
-                },
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-                ),
-                isError = password.isNotBlank() && password.length < 6
+                }
             )
 
-            // Message d'erreur pour le mot de passe
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Champ Confirmation mot de passe
+            CustomInput(
+                value = confirmPassword,
+                onValueChange = { confirmPassword = it },
+                placeholder = "Confirmer le mot de passe *",
+                height = 50.dp,
+                isPassword = true,
+                passwordVisible = confirmPasswordVisible,
+                suffix = {
+                    IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
+                        Icon(
+                            painter = painterResource(
+                                if (confirmPasswordVisible)
+                                    R.drawable.fi_rr_eye
+                                else
+                                    R.drawable.fi_rr_eye_crossed
+                            ),
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                            tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.3f)
+                        )
+                    }
+                }
+            )
+            // Messages d'erreur
             if (password.isNotBlank() && password.length < 6) {
                 Text(
                     text = "Le mot de passe doit contenir au moins 6 caractères",
@@ -286,58 +225,7 @@ fun RegisterScreen(
                 )
             }
 
-            // Champ Confirmer le mot de passe (obligatoire)
-            OutlinedTextField(
-                value = confirmPassword,
-                onValueChange = { confirmPassword = it },
-                label = { Text("Confirmer le mot de passe *") },
-                placeholder = { Text("Retapez votre mot de passe") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 6.dp),
-                shape = RoundedCornerShape(14.dp),
-                singleLine = true,
-                enabled = !isLoading,
-                visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password,
-                    imeAction = ImeAction.Done
-                ),
-                keyboardActions = KeyboardActions(
-                    onDone = {
-                        focusManager.clearFocus()
-                        if (isFormValid) {
-                            authViewModel.register(
-                                username = username,
-                                email = email,
-                                password = password,
-                                firstName = firstName.ifBlank { null },
-                                lastName = lastName.ifBlank { null },
-                                phoneNumber = phoneNumber.ifBlank { null }
-                            )
-                        }
-                    }
-                ),
-                trailingIcon = {
-                    IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
-                        Icon(
-                            painter = painterResource(
-                                id = if (confirmPasswordVisible) R.drawable.fi_rr_eye else R.drawable.fi_rr_eye_crossed
-                            ),
-                            contentDescription = if (confirmPasswordVisible) "Masquer le mot de passe" else "Afficher le mot de passe",
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                },
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-                ),
-                isError = confirmPassword.isNotBlank() && !isPasswordMatch
-            )
-
-            // Message d'erreur pour la confirmation du mot de passe
-            if (confirmPassword.isNotBlank() && !isPasswordMatch) {
+            if (confirmPassword.isNotBlank() && password.isNotBlank() && !isPasswordMatch) {
                 Text(
                     text = "Les mots de passe ne correspondent pas",
                     color = MaterialTheme.colorScheme.error,
@@ -355,7 +243,7 @@ fun RegisterScreen(
                 Text(
                     text = error,
                     color = MaterialTheme.colorScheme.error,
-                    fontSize = 14.sp,
+                    fontSize = 12.sp,
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.Start
                 )
@@ -380,7 +268,7 @@ fun RegisterScreen(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp),
+                    .height(45.dp),
                 shape = RoundedCornerShape(14.dp),
                 enabled = !isLoading && isFormValid,
                 colors = ButtonDefaults.buttonColors(
@@ -390,14 +278,14 @@ fun RegisterScreen(
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
+                        modifier = Modifier.size(20.dp),
                         color = Color.White,
                         strokeWidth = 2.dp
                     )
                 } else {
                     Text(
                         text = "Créer mon compte",
-                        fontSize = 16.sp,
+                        fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold
                     )
                 }
@@ -414,7 +302,7 @@ fun RegisterScreen(
                 Text(
                     text = "Vous avez déjà un compte? ",
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                    fontSize = 14.sp
+                    fontSize = 12.sp
                 )
                 TextButton(
                     onClick = {
@@ -427,7 +315,7 @@ fun RegisterScreen(
                     Text(
                         text = "Se connecter",
                         color = MaterialTheme.colorScheme.primary,
-                        fontSize = 14.sp,
+                        fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold
                     )
                 }

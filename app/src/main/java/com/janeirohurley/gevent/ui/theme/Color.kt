@@ -16,7 +16,7 @@ val BackgroundDark = Color(0xFF25131a)
 val CardLight = Color(0xFFFFFFFF)
 val CardDark = Color(0xFF2a1920)
 
-var accentColor = Color(0xFFFB2097)
+var accentColor = Color(0x8B512DA8)
 
 var cornerColorLight = CardLight
 var cornerColorDark = Color(0xFF311822)

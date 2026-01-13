@@ -44,6 +44,8 @@ import com.janeirohurley.gevent.ui.screen.SettingScreen
 import com.janeirohurley.gevent.ui.screen.LoginScreen
 import com.janeirohurley.gevent.ui.screen.RegisterScreen
 import com.janeirohurley.gevent.ui.screen.ManageEventsScreen
+import com.janeirohurley.gevent.ui.screen.CreateEventScreen
+import com.janeirohurley.gevent.ui.screen.QRScannerScreen
 import com.janeirohurley.gevent.ui.theme.GEventTheme
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.janeirohurley.gevent.viewmodel.AuthViewModel
@@ -168,6 +170,12 @@ fun MainScreen() {
             }
             composable("manage_events") {
                 ManageEventsScreen(navController = navController)
+            }
+            composable("create_event") {
+                CreateEventScreen(navController = navController)
+            }
+            composable("qr_scanner") {
+                QRScannerScreen(navController = navController)
             }
             composable("view_ticket/{ticketId}") { backStackEntry ->
                 val ticketId = backStackEntry.arguments?.getString("ticketId") ?: ""

@@ -1,23 +1,42 @@
 package com.janeirohurley.gevent.ui.screen
 
-import androidx.compose.animation.*
-import androidx.compose.animation.core.*
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,26 +44,25 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavHostController
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.janeirohurley.gevent.ui.components.Filter
-import com.janeirohurley.gevent.ui.components.MapEventList
-import com.janeirohurley.gevent.ui.components.RecommendationCard
-import com.janeirohurley.gevent.ui.components.SearchBar
-import com.janeirohurley.gevent.viewmodel.EventUiModel
-import com.janeirohurley.gevent.viewmodel.EventViewModel
-import com.janeirohurley.gevent.utils.DataMapper.toUiModelList
+import androidx.navigation.NavHostController
 import com.janeirohurley.gevent.R
-import com.janeirohurley.gevent.ui.components.MapEventListOrientation
-import com.janeirohurley.gevent.ui.components.UpcomingEventCard
-import com.janeirohurley.gevent.ui.components.UpcomingEventCardSkeleton
-import com.janeirohurley.gevent.ui.components.EventCardSkeleton
-import com.janeirohurley.gevent.ui.components.RecommendationCardSkeleton
 import com.janeirohurley.gevent.ui.components.EmptyEventsState
 import com.janeirohurley.gevent.ui.components.EmptySearchState
+import com.janeirohurley.gevent.ui.components.EventCardSkeleton
+import com.janeirohurley.gevent.ui.components.Filter
+import com.janeirohurley.gevent.ui.components.MapEventList
+import com.janeirohurley.gevent.ui.components.MapEventListOrientation
+import com.janeirohurley.gevent.ui.components.RecommendationCard
+import com.janeirohurley.gevent.ui.components.RecommendationCardSkeleton
+import com.janeirohurley.gevent.ui.components.SearchBar
+import com.janeirohurley.gevent.ui.components.UpcomingEventCard
+import com.janeirohurley.gevent.ui.components.UpcomingEventCardSkeleton
 import com.janeirohurley.gevent.ui.components.shimmerEffect
-import com.janeirohurley.gevent.viewmodel.UserViewModel
+import com.janeirohurley.gevent.utils.DataMapper.toUiModelList
 import com.janeirohurley.gevent.utils.DateFormatter
+import com.janeirohurley.gevent.viewmodel.EventViewModel
+import com.janeirohurley.gevent.viewmodel.UserViewModel
 
 // Fonction pour obtenir la couleur personnalisée de chaque filtre
 fun getFilterColor(filter: String): Color {
@@ -60,6 +78,7 @@ fun getFilterColor(filter: String): Color {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
@@ -72,7 +91,8 @@ fun HomeScreen(
     // États avec préservation
     // -------------------------
     var searchQuery by rememberSaveable { mutableStateOf("") }
-    val filters = listOf("Music", "Education", "Film&Cinema", "Sport", "Jeux", "Voyage", "Concert")
+    val categories by viewModel.categories.collectAsState()
+    val filters = remember(categories) { categories.map { it.name } }
     var selectedFilter by rememberSaveable { mutableStateOf<String?>(null) }
     var showFilterMenu by rememberSaveable { mutableStateOf(false) }
 
@@ -80,6 +100,9 @@ fun HomeScreen(
     val mainScrollState = rememberScrollState()
     val filterScrollState = rememberScrollState()
     val upcomingEventsScrollState = rememberLazyListState()
+    
+    // Pull-to-refresh state
+    val pullToRefreshState = rememberPullToRefreshState()
 
     // États du ViewModel
     val apiEvents by viewModel.events.collectAsState()
@@ -96,6 +119,7 @@ fun HomeScreen(
         viewModel.loadEvents()
         viewModel.loadPopularEvents()
         viewModel.loadUpcomingEvents()
+        viewModel.loadCategories()
         userViewModel.loadProfile()
     }
 
@@ -188,13 +212,16 @@ fun HomeScreen(
     }
 
     // -------------------------
-    // Layout principal avec scrolling
+    // Layout principal avec scrolling et pull-to-refresh
     // -------------------------
-    Column(
+    Box(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
         // -------------------------
         // SearchBar FIXE (ne scroll pas)
         // -------------------------
@@ -271,13 +298,24 @@ fun HomeScreen(
         }
 
         // -------------------------
-        // Contenu scrollable avec état préservé
+        // Contenu scrollable avec état préservé et pull-to-refresh
         // -------------------------
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(mainScrollState)
+        androidx.compose.material3.pulltorefresh.PullToRefreshBox(
+            state = pullToRefreshState,
+            isRefreshing = isLoading,
+            onRefresh = {
+                viewModel.loadEvents()
+                viewModel.loadPopularEvents()
+                viewModel.loadUpcomingEvents()
+                userViewModel.loadProfile()
+            },
+            modifier = Modifier.fillMaxSize()
         ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(mainScrollState)
+            ) {
 
 
             // Titre avec skeleton pendant le chargement
@@ -315,11 +353,7 @@ fun HomeScreen(
                         style = MaterialTheme.typography.titleMedium,
                     )
 
-                    Text(
-                        text = "Tous",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+
                 }
             }
 
@@ -409,11 +443,7 @@ fun HomeScreen(
                         style = MaterialTheme.typography.titleMedium,
                     )
 
-                    Text(
-                        text = "Tous",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+
                 }
             }
 
@@ -495,11 +525,7 @@ fun HomeScreen(
                         style = MaterialTheme.typography.titleMedium,
                     )
 
-                    Text(
-                        text = "Tous",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+
                 }
             }
 
@@ -558,6 +584,8 @@ fun HomeScreen(
             }
 
 
+            }
+        }
         }
     }
 }

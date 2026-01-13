@@ -44,6 +44,10 @@ class EventViewModel(
     private val _currentEvent = MutableStateFlow<Event?>(null)
     val currentEvent: StateFlow<Event?> = _currentEvent.asStateFlow()
 
+    // Catégories
+    private val _categories = MutableStateFlow<List<com.janeirohurley.gevent.data.model.Category>>(emptyList())
+    val categories: StateFlow<List<com.janeirohurley.gevent.data.model.Category>> = _categories.asStateFlow()
+
     /**
      * Charger tous les événements
      */
@@ -248,5 +252,21 @@ class EventViewModel(
      */
     fun clearError() {
         _error.value = null
+    }
+
+    /**
+     * Charger les catégories
+     */
+    fun loadCategories() {
+        viewModelScope.launch {
+            repository.getCategories().fold(
+                onSuccess = { categoryList ->
+                    _categories.value = categoryList
+                },
+                onFailure = { exception ->
+                    _error.value = exception.message ?: "Erreur de chargement des catégories"
+                }
+            )
+        }
     }
 }

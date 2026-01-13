@@ -1,5 +1,6 @@
 package com.janeirohurley.gevent.ui.screen
 
+import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -37,6 +38,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
@@ -51,6 +53,7 @@ import com.janeirohurley.gevent.viewmodel.TicketUiModel
 import com.janeirohurley.gevent.viewmodel.TicketViewModel
 
 
+@SuppressLint("CoroutineCreationDuringComposition")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TicketsScreen(
@@ -204,7 +207,7 @@ fun TicketsScreen(
                                             showCancelSheet = true
                                         },
                                         modifier = Modifier.weight(1f),
-                                        shape = RoundedCornerShape(14.dp),
+                                        shape = RoundedCornerShape(10.dp),
                                         colors = ButtonDefaults.outlinedButtonColors(
                                             contentColor = MaterialTheme.colorScheme.onSurface.copy(
                                                 alpha = 0.4f
@@ -215,7 +218,7 @@ fun TicketsScreen(
                                             color = MaterialTheme.colorScheme.onSurface
                                         )
                                     ) {
-                                        Text("Annuler")
+                                        Text("Annuler", fontSize = 12.sp)
                                     }
 
                                     Button(
@@ -235,7 +238,7 @@ fun TicketsScreen(
                                             color = MaterialTheme.colorScheme.primary
                                         )
                                     ) {
-                                        Text("Voir le Ticket")
+                                        Text("Voir le Ticket", fontSize = 12.sp)
                                     }
                                 }
 
@@ -379,7 +382,7 @@ fun TicketsScreen(
             value = reviewComment,
             onValueChange = { reviewComment = it },
             placeholder = {
-                Text("Laissez un commentaire (optionnel)")
+                Text("Laissez un commentaire (optionnel)", fontSize = 12.sp)
             },
             modifier = Modifier
                 .fillMaxWidth()

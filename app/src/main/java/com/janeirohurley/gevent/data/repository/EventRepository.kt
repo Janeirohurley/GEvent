@@ -162,4 +162,22 @@ class EventRepository(
      * Retirer des favoris
      */
     suspend fun removeFromFavorites(eventId: String): Result<Unit> = toggleFavorite(eventId)
+
+    /**
+     * Récupérer toutes les catégories
+     */
+    suspend fun getCategories(): Result<List<com.janeirohurley.gevent.data.model.Category>> = withContext(Dispatchers.IO) {
+        try {
+            val categories = apiService.getCategories()
+            Result.success(categories)
+        } catch (e: UnknownHostException) {
+            Result.failure(Exception("Erreur réseau: Impossible de se connecter au serveur"))
+        } catch (e: SocketTimeoutException) {
+            Result.failure(Exception("Erreur réseau: Délai d'attente dépassé"))
+        } catch (e: IOException) {
+            Result.failure(Exception("Erreur réseau: ${e.message ?: "Problème de connexion"}"))
+        } catch (e: Exception) {
+            Result.failure(Exception("Erreur: ${e.message ?: "Erreur inconnue"}"))
+        }
+    }
 }

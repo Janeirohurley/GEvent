@@ -17,11 +17,11 @@ import com.janeirohurley.gevent.R
 
 @Composable
 fun SearchBar(
+    modifier: Modifier = Modifier,
     value: String,
     onValueChange: (String) -> Unit,
     onFilterClick: () -> Unit,
-    placeholder: String = "Rechercher",
-    modifier: Modifier = Modifier
+    placeholder: String = "Recherche",
 ) {
     Surface(
         modifier = modifier.fillMaxWidth(),
@@ -35,11 +35,11 @@ fun SearchBar(
                 .height(45.dp)
                 .padding(horizontal = 12.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
-        ) {
+        ) { 
         // Icône de recherche à gauche
         Icon(
             painter = painterResource(R.drawable.fi_rr_search),
-            contentDescription = "Rechercher",
+            contentDescription = "Recherche",
             tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
             modifier = Modifier.size(20.dp)
         )

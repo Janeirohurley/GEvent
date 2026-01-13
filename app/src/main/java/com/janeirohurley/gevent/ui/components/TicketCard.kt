@@ -1,5 +1,7 @@
 package com.janeirohurley.gevent.ui.components
 
+import android.graphics.BitmapFactory
+import android.util.Base64
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -25,6 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalDensity
@@ -78,7 +81,32 @@ fun TicketCard(
                         Spacer(Modifier.height(16.dp))
                         BoxWithConstraints {
                             val qrSize = maxWidth * 0.75f
-                            Image(painterResource(R.drawable.qrcode), contentDescription = "QR Code", modifier = Modifier.size(qrSize))
+                            
+                            // Décoder le QR code depuis base64
+                            val qrBitmap = remember(ticket.qrCode) {
+                                try {
+                                    if (!ticket.qrCode.isNullOrBlank()) {
+                                        // Extraire le base64 du Data URL
+                                        val base64String = if (ticket.qrCode.startsWith("data:image")) {
+                                            ticket.qrCode.substringAfter("base64,")
+                                        } else {
+                                            ticket.qrCode
+                                        }
+                                        val decodedBytes = Base64.decode(base64String, Base64.DEFAULT)
+                                        BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+                                    } else null
+                                } catch (e: Exception) {
+                                    null
+                                }
+                            }
+                            
+                            qrBitmap?.let {
+                                Image(
+                                    bitmap = it.asImageBitmap(),
+                                    contentDescription = "QR Code",
+                                    modifier = Modifier.size(qrSize)
+                                )
+                            }
                         }
                         Spacer(Modifier.height(24.dp))
                         DottedDivider(

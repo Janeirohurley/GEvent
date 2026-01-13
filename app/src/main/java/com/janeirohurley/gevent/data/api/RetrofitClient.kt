@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit
 object RetrofitClient {
 
     // TODO: Remplacer par votre URL d'API réelle
-    private const val BASE_URL = "http://192.168.0.106:8001/api/"
+    private const val BASE_URL = "http://192.168.0.105:8001/api/"
 
     // Token d'authentification (stocké après login)
     private var authToken: String? = null

@@ -5,28 +5,23 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.janeirohurley.gevent.R
+import com.janeirohurley.gevent.ui.components.CustomInput
 import com.janeirohurley.gevent.viewmodel.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -103,71 +98,47 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(40.dp))
 
             // Champ Nom d'utilisateur
-            OutlinedTextField(
+
+
+            CustomInput(
                 value = username,
                 onValueChange = { username = it },
-                label = { Text("Nom d'utilisateur") },
-                placeholder = { Text("Entrez votre nom d'utilisateur") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                shape = RoundedCornerShape(14.dp),
-                singleLine = true,
-                enabled = !isLoading,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Text,
-                    imeAction = ImeAction.Next
-                ),
-                keyboardActions = KeyboardActions(
-                    onNext = { focusManager.moveFocus(FocusDirection.Down) }
-                ),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-                )
-            )
+                placeholder =  "Entrez votre nom d'utilisateur" ,
+                height = 50.dp,
 
+            )
+            Spacer(modifier = Modifier.height(10    .dp))
             // Champ Mot de passe
-            OutlinedTextField(
+
+            CustomInput(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text("Mot de passe") },
-                placeholder = { Text("Entrez votre mot de passe") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                shape = RoundedCornerShape(14.dp),
-                singleLine = true,
-                enabled = !isLoading,
-                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password,
-                    imeAction = ImeAction.Done
-                ),
-                keyboardActions = KeyboardActions(
-                    onDone = {
-                        focusManager.clearFocus()
-                        if (username.isNotBlank() && password.isNotBlank()) {
-                            authViewModel.login(username, password)
-                        }
-                    }
-                ),
-                trailingIcon = {
+                placeholder = "Entrez votre mot de passe",
+                modifier = Modifier.padding(vertical = 10.dp),
+                height = 50.dp,
+                isPassword = true,
+                passwordVisible = passwordVisible,   // 👈 clé magique
+                suffix = {
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
                             painter = painterResource(
-                                id = if (passwordVisible) R.drawable.fi_rr_eye else R.drawable.fi_rr_eye_crossed
+                                if (passwordVisible)
+                                    R.drawable.fi_rr_eye
+                                else
+                                    R.drawable.fi_rr_eye_crossed
                             ),
-                            contentDescription = if (passwordVisible) "Masquer le mot de passe" else "Afficher le mot de passe",
-                            modifier = Modifier.size(20.dp)
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                            tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.3f)
                         )
                     }
-                },
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-                )
+                }
             )
+
+
+
+
+
 
             // Message d'erreur
             errorMessage?.let { error ->
@@ -175,7 +146,7 @@ fun LoginScreen(
                 Text(
                     text = error,
                     color = MaterialTheme.colorScheme.error,
-                    fontSize = 14.sp,
+                    fontSize = 12.sp,
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.Start
                 )
@@ -193,7 +164,7 @@ fun LoginScreen(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp),
+                    .height(45.dp),
                 shape = RoundedCornerShape(14.dp),
                 enabled = !isLoading && username.isNotBlank() && password.isNotBlank(),
                 colors = ButtonDefaults.buttonColors(
@@ -205,12 +176,12 @@ fun LoginScreen(
                     CircularProgressIndicator(
                         modifier = Modifier.size(24.dp),
                         color = Color.White,
-                        strokeWidth = 2.dp
+                        strokeWidth =1.dp
                     )
                 } else {
                     Text(
                         text = "Se connecter",
-                        fontSize = 16.sp,
+                        fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold
                     )
                 }
@@ -226,7 +197,7 @@ fun LoginScreen(
                 Text(
                     text = "Mot de passe oublié?",
                     color = MaterialTheme.colorScheme.primary,
-                    fontSize = 14.sp
+                    fontSize = 12.sp
                 )
             }
 
@@ -242,10 +213,10 @@ fun LoginScreen(
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
                 )
                 Text(
-                    text = "OU",
+                    text = "ou",
                     modifier = Modifier.padding(horizontal = 16.dp),
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                    fontSize = 14.sp
+                    fontSize = 12.sp
                 )
                 HorizontalDivider(
                     modifier = Modifier.weight(1f),
@@ -262,11 +233,11 @@ fun LoginScreen(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp),
+                    .height(45.dp),
                 shape = RoundedCornerShape(14.dp),
                 enabled = !isLoading,
                 border = BorderStroke(
-                    width = 1.5.dp,
+                    width = 1.dp,
                     color = MaterialTheme.colorScheme.primary
                 ),
                 colors = ButtonDefaults.outlinedButtonColors(
@@ -275,7 +246,7 @@ fun LoginScreen(
             ) {
                 Text(
                     text = "Créer un compte",
-                    fontSize = 16.sp,
+                    fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold
                 )
             }

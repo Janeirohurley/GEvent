@@ -94,7 +94,7 @@ fun BottomNavigationBar(
         modifier = modifier.fillMaxWidth()
     ) {
         Surface(
-            modifier = Modifier.fillMaxWidth().height(60.dp),
+            modifier = Modifier.fillMaxWidth().height(50.dp),
             color = MaterialTheme.colorScheme.surface,
             shadowElevation = 8.dp
         ) {
@@ -219,7 +219,7 @@ private fun BottomNavItem(
             tint = iconColor,
             modifier = Modifier
                 .align(Alignment.Center)
-                .size(26.dp)
+                .size(20.dp)
         )
     }
 }
@@ -235,9 +235,9 @@ private fun FloatingManageButton(
 ) {
     val backgroundColor by animateColorAsState(
         targetValue = if (isSelected)
-            MaterialTheme.colorScheme.primary
+            MaterialTheme.colorScheme.surface
         else
-            MaterialTheme.colorScheme.primaryContainer,
+            MaterialTheme.colorScheme.surface,
         animationSpec = tween(durationMillis = 200),
         label = "backgroundColor"
     )
@@ -262,15 +262,15 @@ private fun FloatingManageButton(
     Surface(
         modifier = modifier
             .offset(y = (-20).dp)
-            .size(64.dp)
+            .size(50.dp)
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
                 onClick = onClick
             ),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(36.dp),
         color = backgroundColor,
-        shadowElevation = 8.dp
+        shadowElevation = 1.dp
     ) {
         Box(
             modifier = Modifier
@@ -282,7 +282,7 @@ private fun FloatingManageButton(
                 painter = painterResource(R.drawable.fi_rr_calendar),
                 contentDescription = "Gérer événements",
                 tint = iconColor,
-                modifier = Modifier.size(28.dp)
+                modifier = Modifier.size(20.dp)
             )
         }
     }

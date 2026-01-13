@@ -19,6 +19,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.janeirohurley.gevent.R
 import com.janeirohurley.gevent.utils.truncateByWords
@@ -56,7 +57,7 @@ fun UpcomingEventCard(
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
-                            .size(100.dp)
+                            .size(80.dp)
                             .clip(RoundedCornerShape(12.dp))
                     )
                 }
@@ -66,7 +67,7 @@ fun UpcomingEventCard(
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
-                            .size(100.dp)
+                            .size(80.dp)
                             .clip(RoundedCornerShape(12.dp))
                     )
                 }
@@ -76,7 +77,7 @@ fun UpcomingEventCard(
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .height(100.dp),
+                    .height(80.dp),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
                 Column {
@@ -85,7 +86,8 @@ fun UpcomingEventCard(
                         text = title,
                         style = MaterialTheme.typography.titleMedium,
                         maxLines = 1,
-                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                        fontSize = 16.sp
 
                     )
 

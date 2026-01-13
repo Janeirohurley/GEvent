@@ -21,6 +21,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.janeirohurley.gevent.R
 import com.janeirohurley.gevent.utils.truncateByWords
@@ -62,7 +63,7 @@ fun RecommendationCard(
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
-                            .size(100.dp)
+                            .size(80.dp)
                             .clip(RoundedCornerShape(12.dp))
                     )
                 }
@@ -72,7 +73,7 @@ fun RecommendationCard(
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
-                            .size(100.dp)
+                            .size(80.dp)
                             .clip(RoundedCornerShape(12.dp))
                     )
                 }
@@ -82,7 +83,7 @@ fun RecommendationCard(
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .height(100.dp),
+                    .height(80.dp),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
                 Column {
@@ -91,7 +92,10 @@ fun RecommendationCard(
                         text = title,
                         style = MaterialTheme.typography.titleMedium,
                         maxLines = 1,
-                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                        fontSize = 16.sp,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+
+
                     )
 
                     Spacer(modifier = Modifier.height(4.dp))
@@ -100,7 +104,8 @@ fun RecommendationCard(
                     Text(
                         text = date,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                        fontSize = 12.sp
                     )
                 }
 
@@ -146,7 +151,8 @@ fun RecommendationCard(
                             text = if (isFree) "Gratuit" else price ?: "Payant",
                             style = MaterialTheme.typography.bodySmall,
                             color = Color.White,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 10.sp
                         )
                     }
                 }
@@ -158,8 +164,6 @@ fun RecommendationCard(
 
         // ─────── Actions facultatives ───────
         if (actions != null) {
-            Spacer(modifier = Modifier.height(8.dp))
-
             Row(
                 modifier = Modifier
                     .fillMaxWidth()

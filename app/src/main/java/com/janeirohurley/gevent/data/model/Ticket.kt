@@ -33,3 +33,17 @@ data class Ticket(
     @SerializedName("status")
     val status: String = "active" // active, cancelled, used
 )
+
+/**
+ * Modèle de données pour la réponse de validation de ticket
+ */
+data class TicketValidationResponse(
+    @SerializedName("valid")
+    val valid: Boolean,
+
+    @SerializedName("message")
+    val message: String,
+
+    @SerializedName("ticket")
+    val ticket: Ticket? = null
+)

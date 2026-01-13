@@ -134,6 +134,88 @@ interface ApiService {
      */
     @GET("categories/")
     suspend fun getCategories(): List<Category>
+
+    // ==================== ORGANISATEUR ====================
+
+    /**
+     * Récupérer les événements de l'organisateur connecté
+     */
+    @GET("events/my_events/")
+    suspend fun getMyOrganizedEvents(): List<OrganizerEvent>
+
+    /**
+     * Créer un nouvel événement
+     */
+    @POST("events/")
+    suspend fun createEvent(
+        @Body request: CreateEventRequest
+    ): OrganizerEvent
+
+    /**
+     * Créer un nouvel événement avec image
+     */
+    @Multipart
+    @POST("events/")
+    suspend fun createEventWithImage(
+        @Part("title") title: okhttp3.RequestBody,
+        @Part("description") description: okhttp3.RequestBody?,
+        @Part("category_id") categoryId: okhttp3.RequestBody,
+        @Part("location") location: okhttp3.RequestBody?,
+        @Part("latitude") latitude: okhttp3.RequestBody?,
+        @Part("longitude") longitude: okhttp3.RequestBody?,
+        @Part("date") date: okhttp3.RequestBody,
+        @Part("endDate") endDate: okhttp3.RequestBody?,
+        @Part("duration") duration: okhttp3.RequestBody?,
+        @Part("isFree") isFree: okhttp3.RequestBody,
+        @Part("price") price: okhttp3.RequestBody?,
+        @Part("tvaRate") tvaRate: okhttp3.RequestBody,
+        @Part("totalCapacity") totalCapacity: okhttp3.RequestBody,
+        @Part("organizerName") organizerName: okhttp3.RequestBody?,
+        @Part image: okhttp3.MultipartBody.Part?
+    ): OrganizerEvent
+
+    /**
+     * Uploader une image pour un événement
+     */
+    @Multipart
+    @POST("events/{id}/upload_image/")
+    suspend fun uploadEventImage(
+        @Path("id") eventId: String,
+        @Part image: okhttp3.MultipartBody.Part
+    ): OrganizerEvent
+
+    /**
+     * Mettre à jour un événement
+     */
+    @PUT("events/{id}/")
+    suspend fun updateEvent(
+        @Path("id") eventId: String,
+        @Body request: com.janeirohurley.gevent.data.model.UpdateEventRequest
+    ): com.janeirohurley.gevent.data.model.OrganizerEvent
+
+    /**
+     * Annuler un événement
+     */
+    @POST("events/{id}/cancel/")
+    suspend fun cancelEvent(@Path("id") eventId: String): com.janeirohurley.gevent.data.model.OrganizerEvent
+
+    /**
+     * Marquer un événement comme terminé
+     */
+    @POST("events/{id}/complete/")
+    suspend fun completeEvent(@Path("id") eventId: String): com.janeirohurley.gevent.data.model.OrganizerEvent
+
+    /**
+     * Obtenir les statistiques d'un événement
+     */
+    @GET("events/{id}/stats/")
+    suspend fun getEventStats(@Path("id") eventId: String): com.janeirohurley.gevent.data.model.EventStats
+
+    /**
+     * Valider un ticket via QR code
+     */
+    @POST("tickets/validate_qr/")
+    suspend fun validateTicket(@Body qr_data: Map<String, String>): TicketValidationResponse
 }
 
 // ==================== REQUÊTES ====================
