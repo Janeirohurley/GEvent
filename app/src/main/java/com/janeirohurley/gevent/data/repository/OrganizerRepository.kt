@@ -133,7 +133,7 @@ class OrganizerRepository(
                 )
                 
                 okhttp3.MultipartBody.Part.createFormData(
-                    "image",
+                    "image_url",
                     "event_image.jpg",
                     requestBody
                 )

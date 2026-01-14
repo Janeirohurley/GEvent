@@ -71,7 +71,7 @@ fun  EventStatusTabs(
                         ) {
                             onTabSelected(tab)
                         }
-                        .padding(vertical = 10.dp),
+                        .padding(vertical = 8.dp),
                     contentAlignment = Alignment.Center
                 ){
                     Text(

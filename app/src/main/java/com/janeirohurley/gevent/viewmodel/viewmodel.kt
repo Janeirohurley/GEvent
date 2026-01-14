@@ -13,7 +13,8 @@ data class EventUiModel(
     val price: String? = null,
     val location: String? = null, // Localisation de l'événement
     val description: String? = null, // Description de l'événement
-    val categorieName: String // Nom de la catégorie de l'événement
+    val categorieName: String ,// Nom de la catégorie de l'événement
+    val currency:String
 )
 
 data class TicketUiModel(

@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,6 +37,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -481,10 +483,17 @@ fun TicketsScreen(
             value = cancelReason,
             onValueChange = { cancelReason = it },
             placeholder = {
-                Text("Ex: Changement de plans, problème personnel...")
+                Text("Ex: Changement de plans, problème personnel...", fontSize = 12.sp)
             },
-            modifier = Modifier.fillMaxWidth(),
+            textStyle = TextStyle(
+                fontSize = 12.sp
+            ),
+            modifier = Modifier.fillMaxWidth().border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.surface
+            ),
             shape = RoundedCornerShape(12.dp),
+
             singleLine = true
         )
 
@@ -494,11 +503,18 @@ fun TicketsScreen(
             value = cancelComment,
             onValueChange = { cancelComment = it },
             placeholder = {
-                Text("Commentaire additionnel (optionnel)")
+                Text("Commentaire additionnel (optionnel)", fontSize = 12.sp)
             },
+            textStyle = TextStyle(
+                fontSize = 12.sp
+            ),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(100.dp),
+                .height(100.dp)
+                .border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.surface
+                ),
             shape = RoundedCornerShape(12.dp),
             maxLines = 4
         )
@@ -519,7 +535,7 @@ fun TicketsScreen(
                 modifier = Modifier.weight(1f),
                 shape = RoundedCornerShape(10.dp)
             ) {
-                Text("Retour")
+                Text("Retour", fontSize = 12.sp)
             }
 
             Button(
@@ -548,7 +564,7 @@ fun TicketsScreen(
                     containerColor = MaterialTheme.colorScheme.error
                 )
             ) {
-                Text("Confirmer l'annulation")
+                Text("Confirmer l'annulation", fontSize = 12.sp)
             }
         }
     }

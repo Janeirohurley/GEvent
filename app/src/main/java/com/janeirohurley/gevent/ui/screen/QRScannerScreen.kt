@@ -93,7 +93,7 @@ fun QRScannerScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Scanner QR Code") },
+                title = { Text("Scanner QR Code", fontSize = 14.sp) },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Retour")
@@ -191,20 +191,31 @@ fun QRScannerScreen(
                     verticalArrangement = Arrangement.SpaceBetween
                 ) {
                     Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = Color.Black.copy(alpha = 0.7f)
-                        )
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color.Transparent
+                    )
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            if (showConfirmation) "QR Code détecté ! Confirmez pour valider" else "Placez le QR code dans le cadre",
-                            modifier = Modifier.padding(16.dp),
+                            text = if (showConfirmation)
+                                "QR Code détecté ! Confirmez pour valider"
+                            else
+                                "Placez le QR code dans le cadre",
                             color = Color.White,
                             textAlign = TextAlign.Center,
-                            style = MaterialTheme.typography.titleMedium
+                            style = MaterialTheme.typography.titleMedium,
+                            fontSize = 12.sp
                         )
                     }
-                    
+                }
+
+
                     if (isLoading) {
                         Card(
                             modifier = Modifier.fillMaxWidth(),

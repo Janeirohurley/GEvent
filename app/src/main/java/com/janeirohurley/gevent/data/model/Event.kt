@@ -63,7 +63,10 @@ data class Event(
     val availableTickets: Int = 0,
 
     @SerializedName("is_favorite")
-    val isFavorite: Boolean = false
+    val isFavorite: Boolean = false,
+
+    @SerializedName("carrency")
+    val currency: String
 
 )
 

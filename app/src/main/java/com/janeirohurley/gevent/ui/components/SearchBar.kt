@@ -65,7 +65,7 @@ fun SearchBar(
                 value = value,
                 onValueChange = onValueChange,
                 textStyle = TextStyle(
-                    fontSize = 16.sp,
+                    fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurface
                 ),
                 cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),

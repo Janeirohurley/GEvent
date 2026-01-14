@@ -169,9 +169,9 @@ interface ApiService {
         @Part("isFree") isFree: okhttp3.RequestBody,
         @Part("price") price: okhttp3.RequestBody?,
         @Part("tvaRate") tvaRate: okhttp3.RequestBody,
-        @Part("totalCapacity") totalCapacity: okhttp3.RequestBody,
+        @Part("total_capacity") totalCapacity: okhttp3.RequestBody,
         @Part("organizerName") organizerName: okhttp3.RequestBody?,
-        @Part image: okhttp3.MultipartBody.Part?
+        @Part image_url: okhttp3.MultipartBody.Part?
     ): OrganizerEvent
 
     /**

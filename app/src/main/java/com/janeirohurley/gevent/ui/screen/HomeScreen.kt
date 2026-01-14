@@ -28,6 +28,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -44,6 +45,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.janeirohurley.gevent.R
@@ -300,7 +302,7 @@ fun HomeScreen(
         // -------------------------
         // Contenu scrollable avec état préservé et pull-to-refresh
         // -------------------------
-        androidx.compose.material3.pulltorefresh.PullToRefreshBox(
+        PullToRefreshBox(
             state = pullToRefreshState,
             isRefreshing = isLoading,
             onRefresh = {
@@ -351,6 +353,7 @@ fun HomeScreen(
                     Text(
                         text = "Evenements à venir",
                         style = MaterialTheme.typography.titleMedium,
+                        fontSize = 13.sp
                     )
 
 
@@ -379,7 +382,7 @@ fun HomeScreen(
                     } else null,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(250.dp)
+                        .height(350.dp)
                 )
             } else if (upcomingEventsUi.isNotEmpty()) {
                 LazyRow(
@@ -441,6 +444,7 @@ fun HomeScreen(
                     Text(
                         text = "Événement Populaire",
                         style = MaterialTheme.typography.titleMedium,
+                        fontSize = 13.sp
                     )
 
 
@@ -523,6 +527,7 @@ fun HomeScreen(
                     Text(
                         text = "Recommandation Pour Toi",
                         style = MaterialTheme.typography.titleMedium,
+                        fontSize = 13.sp
                     )
 
 

@@ -113,6 +113,8 @@ class EventDeserializer : JsonDeserializer<Event> {
             null
         }
 
+
+
         // Désérialiser les autres champs normalement
         return Event(
             id = jsonObject.get("id")?.asString ?: "0",
@@ -128,7 +130,8 @@ class EventDeserializer : JsonDeserializer<Event> {
             attendees = finalParticipants,
             totalTickets = totalTickets,
             availableTickets = availableTickets,
-            isFavorite = isFavoriteValue
+            isFavorite = isFavoriteValue,
+            currency =jsonObject.get("currency").toString(),
         )
     }
 }

@@ -17,6 +17,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
@@ -233,48 +236,58 @@ private fun FloatingManageButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val backgroundColor by animateColorAsState(
-        targetValue = if (isSelected)
-            MaterialTheme.colorScheme.surface
-        else
-            MaterialTheme.colorScheme.surface,
-        animationSpec = tween(durationMillis = 200),
-        label = "backgroundColor"
-    )
-
-    val iconColor by animateColorAsState(
-        targetValue = if (isSelected)
-            MaterialTheme.colorScheme.onPrimary
-        else
-            MaterialTheme.colorScheme.onPrimaryContainer,
-        animationSpec = tween(durationMillis = 200),
-        label = "iconColor"
-    )
-
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
+
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.9f else 1f,
         animationSpec = tween(durationMillis = 100),
         label = "scale"
     )
 
+    val gradient = Brush.linearGradient(
+        colors = if (isSelected) listOf(
+            MaterialTheme.colorScheme.primary,
+            MaterialTheme.colorScheme.primaryContainer
+        ) else listOf(
+            MaterialTheme.colorScheme.surfaceVariant,
+            MaterialTheme.colorScheme.surface
+        )
+    )
+
+    val iconColor by animateColorAsState(
+        targetValue = if (isSelected)
+            MaterialTheme.colorScheme.onPrimary
+        else
+            MaterialTheme.colorScheme.onSurfaceVariant,
+        animationSpec = tween(200),
+        label = "iconColor"
+    )
+
     Surface(
         modifier = modifier
             .offset(y = (-20).dp)
             .size(50.dp)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
                 onClick = onClick
             ),
         shape = RoundedCornerShape(36.dp),
-        color = backgroundColor,
-        shadowElevation = 1.dp
+        shadowElevation = 1.dp,
+        color = Color.Transparent // 👈 important
     ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .background(
+                    brush = gradient,
+                    shape = RoundedCornerShape(36.dp)
+                )
                 .padding(4.dp),
             contentAlignment = Alignment.Center
         ) {
@@ -287,3 +300,4 @@ private fun FloatingManageButton(
         }
     }
 }
+

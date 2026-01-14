@@ -26,6 +26,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -38,6 +39,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.janeirohurley.gevent.R
@@ -111,7 +113,8 @@ fun OrderScreen(
                     Text(
                         "Réservation",
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp
                     )
                 },
                 navigationIcon = {
@@ -119,7 +122,7 @@ fun OrderScreen(
                         Icon(
                             painter = painterResource(R.drawable.fi_rr_angle_left),
                             contentDescription = "Retour",
-                            Modifier.size(20.dp)
+                            Modifier.size(14.dp)
                         )
                     }
                 },
@@ -155,7 +158,7 @@ fun OrderScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp)
-                    .height(50.dp),
+                    .height(45.dp),
                 shape = RoundedCornerShape(10.dp),
                 enabled = ticketCount > 0 && !isLoading
             ) {
@@ -304,7 +307,7 @@ fun OrderScreen(
                                 contentDescription = null,
                                 contentScale = ContentScale.Crop,
                                 modifier = Modifier
-                                    .size(100.dp)
+                                    .size(80.dp)
                                     .clip(RoundedCornerShape(12.dp))
                             )
                         }
@@ -314,7 +317,7 @@ fun OrderScreen(
                                 contentDescription = null,
                                 contentScale = ContentScale.Crop,
                                 modifier = Modifier
-                                    .size(100.dp)
+                                    .size(80.dp)
                                     .clip(RoundedCornerShape(12.dp))
                             )
                         }
@@ -324,7 +327,7 @@ fun OrderScreen(
                     Column(
                         modifier = Modifier
                             .weight(1f)
-                            .height(100.dp),
+                            .height(80.dp),
                         verticalArrangement = Arrangement.SpaceBetween
                     ) {
 
@@ -333,9 +336,10 @@ fun OrderScreen(
                                 text = event.title,
                                 style = MaterialTheme.typography.titleMedium,
                                 maxLines = 1,
-                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                                fontSize = 13.sp
                             )
-                        Spacer(modifier = Modifier.height(4.dp))
+
                         // Lieu
                         if (event.location != null) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -343,7 +347,7 @@ fun OrderScreen(
                                     painter = painterResource(R.drawable.fi_rr_marker),
                                     contentDescription = "Lieu",
                                     tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(20.dp)
+                                    modifier = Modifier.size(14.dp)
                                 )
                                 Spacer(Modifier.width(6.dp))
                                 Text(
@@ -351,10 +355,11 @@ fun OrderScreen(
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurface,
                                     maxLines = 1,
-                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                                    fontSize = 12.sp
+
                                 )
                             }
-                            Spacer(Modifier.height(8.dp))
                         }
 
                         // Date/heure
@@ -363,13 +368,14 @@ fun OrderScreen(
                                 painter = painterResource(R.drawable.fi_rr_calendar) ,
                                 contentDescription = "Date",
                                 tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(15.dp)
                             )
                             Spacer(Modifier.width(6.dp))
                             Text(
                                 text = event.date,
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontSize = 12.sp
                             )
                         }
 
@@ -379,10 +385,14 @@ fun OrderScreen(
 
 
             }
-            Spacer(modifier = Modifier.height(12.dp))
 
-            Text("Résumé de la commande", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.height(12.dp))
+
+            Text("Résumé de la commande",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                fontSize = 15.sp
+            )
+
             // Sélecteur de quantité
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -392,11 +402,11 @@ fun OrderScreen(
                 Text("Nombre de tickets", style = MaterialTheme.typography.bodyMedium)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick = { if (ticketCount > 1) ticketCount-- }) {
-                        Icon(painter = painterResource(R.drawable.fi_rr_minus), contentDescription = "Diminuer")
+                        Icon(painter = painterResource(R.drawable.fi_rr_minus), contentDescription = "Diminuer",modifier = Modifier.size(15.dp))
                     }
                     Text(ticketCount.toString(), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
                     IconButton(onClick = { ticketCount++ }) {
-                        Icon(painter = painterResource(R.drawable.fi_rr_plus), contentDescription = "Augmenter",modifier = Modifier.size(18.dp))
+                        Icon(painter = painterResource(R.drawable.fi_rr_plus), contentDescription = "Augmenter",modifier = Modifier.size(15.dp))
                     }
                 }
             }
@@ -435,22 +445,37 @@ fun OrderScreen(
             }
             Spacer(modifier = Modifier.height(16.dp))
             // Méthode de paiement
-            Text("Méthode de paiement", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text("Méthode de paiement",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                fontSize = 15.sp)
             Spacer(modifier = Modifier.height(8.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Gasape Cash pré-sélectionné
+                RadioButton(
+                    selected = true,           // toujours sélectionné
+                    onClick = null             // désactivé → non cliquable
+                )
+
                 Icon(
                     painter = painterResource(R.drawable.fi_rr_wallet),
                     contentDescription = "Gasape Cash",
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(24.dp)
                 )
+
                 Spacer(Modifier.width(8.dp))
-                Text("Gasape Cash", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
+
+                Text(
+                    text = "Gasape Cash",
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 12.sp
+                )
             }
+
 
         }
     }

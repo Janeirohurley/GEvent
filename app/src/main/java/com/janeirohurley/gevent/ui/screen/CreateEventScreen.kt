@@ -28,6 +28,8 @@ import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.AlertDialog
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.sp
 import com.janeirohurley.gevent.data.model.Category
 import com.janeirohurley.gevent.ui.components.CustomInput
 
@@ -125,14 +127,17 @@ fun CreateEventScreen(
                     Text(
                         "Créer un Événement",
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             painter = painterResource(R.drawable.fi_rr_arrow_left),
-                            contentDescription = "Retour"
+                            contentDescription = "Retour",
+                            modifier = Modifier.size(18.dp)
+
                         )
                     }
                 },
@@ -152,6 +157,7 @@ fun CreateEventScreen(
                 .fillMaxSize()
                 .verticalScroll(scrollState)
                 .padding(16.dp),
+
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // Titre
@@ -166,11 +172,19 @@ fun CreateEventScreen(
             OutlinedTextField(
                 value = description,
                 onValueChange = { description = it },
-                label = { Text("Description") },
+                label = { Text("Description", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)) },
                 modifier = Modifier.fillMaxWidth(),
+                textStyle = TextStyle(
+                    fontSize = 12.sp
+                ),
                 minLines = 3,
                 maxLines = 5,
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.primary
+                )
+
             )
 
             // Sélection d'image
@@ -241,7 +255,8 @@ fun CreateEventScreen(
                         Spacer(Modifier.width(8.dp))
                         Text(
                             if (selectedImageUri != null) "Changer l'image"
-                            else "Sélectionner une image"
+                            else "Sélectionner une image",
+                            fontSize = 12.sp
                         )
                     }
                 }
@@ -362,11 +377,13 @@ fun CreateEventScreen(
             ) {
                 Text(
                     "Événement gratuit",
-                    style = MaterialTheme.typography.bodyLarge
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontSize = 14.sp
                 )
                 Switch(
                     checked = isFree,
-                    onCheckedChange = { isFree = it }
+                    onCheckedChange = { isFree = it },
+                    modifier = Modifier.height(10.dp)
                 )
             }
 

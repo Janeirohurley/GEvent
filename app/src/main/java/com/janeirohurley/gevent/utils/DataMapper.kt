@@ -37,7 +37,8 @@ object DataMapper {
             price = this.price,
             location = this.location,
             description = this.description,
-            categorieName = this.category ?: "Non classé"
+            categorieName = this.category ?: "Non classé",
+            currency = this.currency
         )
     }
 

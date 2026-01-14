@@ -2,6 +2,7 @@ package com.janeirohurley.gevent.ui.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -15,6 +16,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.janeirohurley.gevent.R
 
 /**
@@ -46,7 +48,7 @@ fun EmptyState(
             Icon(
                 painter = painterResource(iconRes),
                 contentDescription = null,
-                modifier = Modifier.size(80.dp),
+                modifier = Modifier.size(70.dp),
                 tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
             )
         }
@@ -59,7 +61,8 @@ fun EmptyState(
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            fontSize = 14.sp
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -69,21 +72,32 @@ fun EmptyState(
             text = message,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            fontSize = 12.sp
         )
 
         // Bouton optionnel
         if (buttonText != null && onButtonClick != null) {
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(20.dp))
             Button(
                 onClick = onButtonClick,
+                modifier = Modifier.height(32.dp), // 👈 hauteur réduite
+                contentPadding = PaddingValues(
+                    horizontal = 12.dp,
+                    vertical = 0.dp
+                ),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary
-                )
+                ),
+                shape = RoundedCornerShape(10.dp),
             ) {
-                Text(text = buttonText)
+                Text(
+                    text = buttonText,
+                    fontSize = 11.sp
+                )
             }
         }
+
     }
 }
 
