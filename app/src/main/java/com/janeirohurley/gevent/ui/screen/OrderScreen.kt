@@ -241,27 +241,82 @@ fun OrderScreen(
             androidx.compose.material3.AlertDialog(
                 onDismissRequest = { viewModel.clearError() },
                 title = {
-                    Text("Erreur de réservation", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error)
-                },
-                text = {
-                    Column {
-                        Text(
-                            text = error ?: "Une erreur est survenue lors de la commande. Veuillez réessayer.",
-                            style = MaterialTheme.typography.bodyMedium
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.fi_rr_cross),
+                            contentDescription = "Erreur",
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(56.dp)
                         )
                         Spacer(Modifier.height(8.dp))
                         Text(
-                            text = "Code erreur: ${error?.substringBefore(":") ?: "Inconnu"}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.error.copy(alpha = 0.8f),
-                            fontWeight = FontWeight.Bold
+                            "Erreur de réservation",
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.error
                         )
-                        Spacer(Modifier.height(4.dp))
+                    }
+                },
+                text = {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        val errorMessage = when {
+                            error!!.contains("Solde insuffisant", ignoreCase = true) -> {
+                                "Votre solde est insuffisant pour effectuer cette commande. Veuillez recharger votre compte Gasape Cash."
+                            }
+                            error!!.contains("HTTP 400", ignoreCase = true) -> {
+                                "Données invalides. Vérifiez les informations de votre commande."
+                            }
+                            error!!.contains("HTTP 401", ignoreCase = true) -> {
+                                "Session expirée. Veuillez vous reconnecter."
+                            }
+                            error!!.contains("HTTP 404", ignoreCase = true) -> {
+                                "Événement introuvable. Il a peut-être été supprimé."
+                            }
+                            error!!.contains("réseau", ignoreCase = true) || error!!.contains("connexion", ignoreCase = true) -> {
+                                "Problème de connexion. Vérifiez votre connexion internet."
+                            }
+                            else -> error
+                        }
+                        
                         Text(
-                            text = "Consultez les logs (Logcat) pour plus de détails.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                            text = errorMessage ?: "Une erreur est survenue",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
+                        
+                        if (error!!.contains("Solde insuffisant", ignoreCase = true)) {
+                            Spacer(Modifier.height(12.dp))
+                            Card(
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.errorContainer
+                                ),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        painter = painterResource(R.drawable.fi_rr_wallet),
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.error,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(Modifier.width(8.dp))
+                                    Text(
+                                        "Rechargez votre compte pour continuer",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onErrorContainer,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
+                        }
                     }
                 },
                 confirmButton = {
@@ -269,9 +324,10 @@ fun OrderScreen(
                         onClick = { viewModel.clearError() },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.error
-                        )
+                        ),
+                        shape = RoundedCornerShape(8.dp)
                     ) {
-                        Text("OK")
+                        Text("Compris")
                     }
                 },
                 shape = RoundedCornerShape(14.dp)

@@ -38,9 +38,13 @@ import com.janeirohurley.gevent.ui.components.CustomInput
 fun CreateEventScreen(
     navController: NavHostController,
     modifier: Modifier = Modifier,
+    eventId: String? = null,
     viewModel: OrganizerViewModel = viewModel()
 ) {
     val context = LocalContext.current
+    val events by viewModel.events.collectAsState()
+    val eventToEdit = eventId?.let { id -> events.find { it.id == id } }
+    
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var location by remember { mutableStateOf("") }
@@ -52,6 +56,29 @@ fun CreateEventScreen(
     var price by remember { mutableStateOf("") }
     var totalCapacity by remember { mutableStateOf("") }
     var selectedImageUri by remember { mutableStateOf<android.net.Uri?>(null) }
+
+    // Charger les événements si on est en mode édition
+    LaunchedEffect(eventId) {
+        if (eventId != null) {
+            viewModel.loadMyEvents()
+        }
+    }
+
+    // Pré-remplir les champs quand l'événement est chargé
+    LaunchedEffect(eventToEdit) {
+        eventToEdit?.let { event ->
+            title = event.title
+            description = event.description ?: ""
+            location = event.location ?: ""
+            date = event.date
+            endDate = event.endDate ?: ""
+            duration = event.duration ?: ""
+            selectedCategory = event.category?.id
+            isFree = event.isFree
+            price = event.price ?: ""
+            totalCapacity = event.totalCapacity.toString()
+        }
+    }
 
     // Date pickers states
     var showStartDatePicker by remember { mutableStateOf(false) }
@@ -125,7 +152,7 @@ fun CreateEventScreen(
             TopAppBar(
                 title = {
                     Text(
-                        "Créer un Événement",
+                        if (eventToEdit != null) "Modifier l'Événement" else "Créer un Événement",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp
@@ -203,7 +230,7 @@ fun CreateEventScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     if (selectedImageUri != null) {
-                        // Afficher l'image sélectionnée
+                        // Afficher l'image sélectionnée localement
                         val bitmap = remember(selectedImageUri) {
                             context.contentResolver.openInputStream(selectedImageUri!!)?.use { stream ->
                                 android.graphics.BitmapFactory.decodeStream(stream)
@@ -220,6 +247,18 @@ fun CreateEventScreen(
                                 contentScale = ContentScale.Crop
                             )
                         }
+                    } else if (eventToEdit?.imageUrl != null) {
+                        // Afficher l'image existante depuis l'URL
+                        coil.compose.AsyncImage(
+                            model = eventToEdit.imageUrl,
+                            contentDescription = "Image de l'événement",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp),
+                            contentScale = ContentScale.Crop,
+                            placeholder = painterResource(R.drawable.image_up),
+                            error = painterResource(R.drawable.image_up)
+                        )
                     } else {
                         // Icône placeholder
                         Icon(
@@ -255,6 +294,7 @@ fun CreateEventScreen(
                         Spacer(Modifier.width(8.dp))
                         Text(
                             if (selectedImageUri != null) "Changer l'image"
+                            else if (eventToEdit?.imageUrl != null) "Changer l'image"
                             else "Sélectionner une image",
                             fontSize = 12.sp
                         )
@@ -401,38 +441,79 @@ fun CreateEventScreen(
 
             Spacer(Modifier.height(8.dp))
 
-            // Bouton de création
+            // Bouton de création/modification
             Button(
                 onClick = {
-                    val request = CreateEventRequest(
-                        title = title,
-                        description = description.ifBlank { null },
-                        categoryId = selectedCategory ?: 1, // Catégorie par défaut si non sélectionnée
-                        location = location.ifBlank { null },
-                        latitude = null, // Le backend gérera la géolocalisation
-                        longitude = null, // Le backend gérera la géolocalisation
-                        date = date,
-                        endDate = endDate.ifBlank { null },
-                        duration = duration.ifBlank { null },
-                        isFree = isFree,
-                        price = if (!isFree && price.isNotBlank()) price else null,
-                        tvaRate = "18.00", // Taux TVA par défaut du Burundi
-                        totalCapacity = totalCapacity.toIntOrNull() ?: 0,
-                        organizerName = null // Le backend utilisera l'utilisateur connecté
-                    )
+                    val imageUri = selectedImageUri // Copie locale pour smart cast
+                    if (eventToEdit != null) {
+                        // Mode modification
+                        if (imageUri != null) {
+                            // Modification avec nouvelle image
+                            viewModel.updateEventWithImage(
+                                eventId = eventToEdit.id,
+                                title = title,
+                                description = description.ifBlank { null },
+                                categoryId = selectedCategory,
+                                location = location.ifBlank { null },
+                                date = date.ifBlank { null },
+                                endDate = endDate.ifBlank { null },
+                                duration = duration.ifBlank { null },
+                                isFree = isFree,
+                                price = if (!isFree && price.isNotBlank()) price else null,
+                                tvaRate = "18.00",
+                                totalCapacity = totalCapacity.toIntOrNull(),
+                                imageUri = imageUri,
+                                context = context
+                            )
+                        } else {
+                            // Modification sans image
+                            viewModel.updateEvent(
+                                eventId = eventToEdit.id,
+                                title = title,
+                                description = description.ifBlank { null },
+                                categoryId = selectedCategory,
+                                location = location.ifBlank { null },
+                                date = date.ifBlank { null },
+                                endDate = endDate.ifBlank { null },
+                                duration = duration.ifBlank { null },
+                                isFree = isFree,
+                                price = if (!isFree && price.isNotBlank()) price else null,
+                                tvaRate = "18.00",
+                                totalCapacity = totalCapacity.toIntOrNull()
+                            )
+                        }
+                    } else {
+                        // Mode création
+                        val request = CreateEventRequest(
+                            title = title,
+                            description = description.ifBlank { null },
+                            categoryId = selectedCategory ?: 1,
+                            location = location.ifBlank { null },
+                            latitude = null,
+                            longitude = null,
+                            date = date,
+                            endDate = endDate.ifBlank { null },
+                            duration = duration.ifBlank { null },
+                            isFree = isFree,
+                            price = if (!isFree && price.isNotBlank()) price else null,
+                            tvaRate = "18.00",
+                            totalCapacity = totalCapacity.toIntOrNull() ?: 0,
+                            organizerName = null
+                        )
 
-                    selectedImageUri?.let { uri ->
-                        viewModel.createEventWithImage(request, uri, context)
-                    } ?: run {
-                        viewModel.createEvent(request)
+                        if (imageUri != null) {
+                            viewModel.createEventWithImage(request, imageUri, context)
+                        } else {
+                            viewModel.createEvent(request)
+                        }
                     }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(45.dp),
                 shape = RoundedCornerShape(12.dp),
-                enabled = !isLoading && title.isNotBlank() && date.isNotBlank() &&
-                         totalCapacity.isNotBlank() && selectedCategory != null
+                enabled = !isLoading && title.isNotBlank() && 
+                         (eventToEdit != null || (date.isNotBlank() && totalCapacity.isNotBlank() && selectedCategory != null))
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(
@@ -441,13 +522,15 @@ fun CreateEventScreen(
                     )
                 } else {
                     Icon(
-                        painter = painterResource(R.drawable.fi_rr_plus),
+                        painter = painterResource(
+                            if (eventToEdit != null) R.drawable.fi_rr_edit else R.drawable.fi_rr_plus
+                        ),
                         contentDescription = null,
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(Modifier.width(8.dp))
                     Text(
-                        "Créer l'événement",
+                        if (eventToEdit != null) "Modifier l'événement" else "Créer l'événement",
                         style = MaterialTheme.typography.titleSmall
                     )
                 }

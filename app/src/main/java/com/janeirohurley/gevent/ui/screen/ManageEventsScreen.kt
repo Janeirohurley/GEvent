@@ -105,7 +105,10 @@ fun ManageEventsScreen(
                     error = error,
                     onRefresh = { viewModel.loadMyEvents() },
                     onCancelEvent = { eventId -> viewModel.cancelEvent(eventId) },
-                    onCompleteEvent = { eventId -> viewModel.completeEvent(eventId) }
+                    onCompleteEvent = { eventId -> viewModel.completeEvent(eventId) },
+                    onEditEvent = { eventId -> navController.navigate("create_event/$eventId") },
+                    onDeleteEvent = { eventId -> viewModel.deleteEvent(eventId) },
+                    onChangeStatus = { eventId, status -> viewModel.changeEventStatus(eventId, status) }
                 )
                 "Scanner QR" -> ScanQRContent(
                     navController = navController

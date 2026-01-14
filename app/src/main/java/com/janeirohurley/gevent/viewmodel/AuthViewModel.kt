@@ -6,6 +6,7 @@ import com.janeirohurley.gevent.data.api.RetrofitClient
 import com.janeirohurley.gevent.data.model.User
 import com.janeirohurley.gevent.data.repository.AuthRepository
 import com.janeirohurley.gevent.utils.TokenManager
+import com.janeirohurley.gevent.utils.ValidationUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -135,8 +136,11 @@ class AuthViewModel : ViewModel() {
             _errorMessage.value = null
             _successMessage.value = null
 
+            // Nettoyer le username (supprimer espaces et convertir en camelCase)
+            val cleanUsername = ValidationUtils.cleanUsername(username)
+
             val result = repository.register(
-                username = username,
+                username = cleanUsername,
                 email = email,
                 password = password,
                 firstName = firstName,

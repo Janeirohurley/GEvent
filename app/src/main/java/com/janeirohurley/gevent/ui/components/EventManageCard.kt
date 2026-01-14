@@ -31,8 +31,12 @@ fun EventManageCard(
     onComplete: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
+    onChangeStatus: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    var showCancelDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    
     val statusText = when {
         event.isOngoing -> "En cours"
         event.isUpcoming -> "À venir"
@@ -234,72 +238,238 @@ fun EventManageCard(
                 
                 Spacer(Modifier.height(16.dp))
                 
-                // Boutons d'action
+                // Gestion du statut
+                if (!event.isCancelled && !event.isDeleted) {
+                    Column {
+                        Text(
+                            "Statut de l'événement",
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            // Bouton À venir
+                            FilterChip(
+                                selected = event.status == "upcoming",
+                                onClick = { if (event.status != "upcoming") onChangeStatus("upcoming") },
+                                label = { Text("À venir", fontSize = 11.sp) },
+                                leadingIcon = {
+                                    Icon(
+                                        painter = painterResource(R.drawable.fi_rr_calendar),
+                                        contentDescription = null,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                    selectedLabelColor = Color.White
+                                )
+                            )
+                            
+                            // Bouton En cours
+                            FilterChip(
+                                selected = event.status == "ongoing",
+                                onClick = { if (event.status != "ongoing") onChangeStatus("ongoing") },
+                                label = { Text("En cours", fontSize = 11.sp) },
+                                leadingIcon = {
+                                    Icon(
+                                        painter = painterResource(R.drawable.fi_rr_time_past),
+                                        contentDescription = null,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                    selectedLabelColor = Color.White
+                                )
+                            )
+                            
+                            // Bouton Terminé
+                            FilterChip(
+                                selected = event.status == "completed",
+                                onClick = { if (event.status != "completed") onChangeStatus("completed") },
+                                label = { Text("Terminé", fontSize = 11.sp) },
+                                leadingIcon = {
+                                    Icon(
+                                        painter = painterResource(R.drawable.fi_rs_check),
+                                        contentDescription = null,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = Color(0xFF4CAF50),
+                                    selectedLabelColor = Color.White
+                                )
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(16.dp))
+                }
+                
+                // Actions rapides
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // Bouton Modifier
-                    OutlinedButton(
+                    FilterChip(
+                        selected = false,
                         onClick = onEdit,
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.fi_rr_edit),
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(Modifier.width(4.dp))
-                        Text("Modifier", fontWeight = FontWeight.Medium,fontSize = 12.sp)
-                    }
-                    
-                    // Bouton Supprimer
-                    if (!event.isCompleted && !event.isCancelled) {
-                        OutlinedButton(
-                            onClick = onDelete,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = MaterialTheme.colorScheme.error
-                            )
-                        ) {
+                        label = { Text("Modifier", fontSize = 11.sp) },
+                        leadingIcon = {
                             Icon(
-                                painter = painterResource(R.drawable.fi_rr_trash),
+                                painter = painterResource(R.drawable.fi_rr_edit),
                                 contentDescription = null,
-                                modifier = Modifier.size(16.dp)
+                                modifier = Modifier.size(14.dp)
                             )
-                            Spacer(Modifier.width(4.dp))
-                            Text("Supprimer", fontWeight = FontWeight.Medium, fontSize = 12.sp)
-                        }
+                        },
+                        enabled = !event.isOngoing && !event.isCompleted
+                    )
+                    
+                    if (!event.isCompleted && !event.isCancelled) {
+                        FilterChip(
+                            selected = false,
+                            onClick = { showDeleteDialog = true },
+                            label = { Text("Supprimer", fontSize = 11.sp) },
+                            leadingIcon = {
+                                Icon(
+                                    painter = painterResource(R.drawable.fi_rr_trash),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                            },
+                            enabled = !event.isOngoing && !event.isCompleted,
+                            colors = FilterChipDefaults.filterChipColors(
+                                disabledLabelColor = MaterialTheme.colorScheme.error.copy(alpha = 0.5f),
+                                labelColor = MaterialTheme.colorScheme.error
+                            )
+                        )
                     }
                     
-                    // Bouton Annuler
                     if (event.isActive) {
-                        Button(
-                            onClick = onCancel,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.error
+                        FilterChip(
+                            selected = false,
+                            onClick = { showCancelDialog = true },
+                            label = { Text("Annuler", fontSize = 11.sp) },
+                            leadingIcon = {
+                                Icon(
+                                    painter = painterResource(R.drawable.fi_rr_time_past),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                            },
+                            colors = FilterChipDefaults.filterChipColors(
+                                labelColor = MaterialTheme.colorScheme.error
                             )
-                        ) {
-                            Text("Annuler", fontWeight = FontWeight.Medium)
-                        }
-                    }
-                    
-                    // Bouton Terminer
-                    if (event.isOngoing) {
-                        Button(
-                            onClick = onComplete,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Text("Terminer", fontWeight = FontWeight.Medium)
-                        }
+                        )
                     }
                 }
             }
         }
+    }
+    
+    // Dialogue de confirmation d'annulation
+    if (showCancelDialog) {
+        AlertDialog(
+            onDismissRequest = { showCancelDialog = false },
+            icon = {
+                Icon(
+                    painter = painterResource(R.drawable.fi_rr_shield_exclamation),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(32.dp)
+                )
+            },
+            title = { Text("Annuler l'événement ?") },
+            text = {
+                Column {
+                    Text("Cette action va :")
+                    Spacer(Modifier.height(8.dp))
+                    Text("• Annuler tous les billets vendus (${event.ticketsSold})")
+                    Text("• Rembourser automatiquement tous les participants")
+                    Text("• Changer le statut de l'événement en 'Annulé'")
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        "Montant total à rembourser : ${event.ticketsSold * (event.priceWithTva?.toDoubleOrNull() ?: event.price?.toDoubleOrNull() ?: 0.0)} ${event.currency}",
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showCancelDialog = false
+                        onCancel()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text("Confirmer l'annulation")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCancelDialog = false }) {
+                    Text("Annuler")
+                }
+            }
+        )
+    }
+    
+    // Dialogue de confirmation de suppression
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            icon = {
+                Icon(
+                    painter = painterResource(R.drawable.fi_rr_trash),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(32.dp)
+                )
+            },
+            title = { Text("Supprimer l'événement ?") },
+            text = {
+                Column {
+                    if (event.ticketsSold > 0) {
+                        Text(
+                            "⚠️ Impossible de supprimer cet événement car ${event.ticketsSold} billet(s) ont été vendu(s).",
+                            color = MaterialTheme.colorScheme.error,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Text("Vous devez d'abord annuler l'événement pour rembourser les participants.")
+                    } else {
+                        Text("Êtes-vous sûr de vouloir supprimer cet événement ?")
+                        Spacer(Modifier.height(8.dp))
+                        Text("L'événement sera marqué comme supprimé mais restera dans la base de données.")
+                    }
+                }
+            },
+            confirmButton = {
+                if (event.ticketsSold == 0) {
+                    Button(
+                        onClick = {
+                            showDeleteDialog = false
+                            onDelete()
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error
+                        )
+                    ) {
+                        Text("Supprimer")
+                    }
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text(if (event.ticketsSold > 0) "Fermer" else "Annuler")
+                }
+            }
+        )
     }
 }

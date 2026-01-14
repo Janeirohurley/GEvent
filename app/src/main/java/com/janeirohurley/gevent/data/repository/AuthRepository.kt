@@ -54,6 +54,7 @@ class AuthRepository {
     ): Result<AuthResponse> {
         return withContext(Dispatchers.IO) {
             try {
+                android.util.Log.d("AUTH_DEBUG", "========== REGISTER REQUEST ==========")
                 val registerRequest = RegisterRequest(
                     username = username,
                     email = email,
@@ -62,17 +63,41 @@ class AuthRepository {
                     lastName = lastName,
                     phoneNumber = phoneNumber
                 )
+                android.util.Log.d("AUTH_DEBUG", "Request: $registerRequest")
+                
                 val response = authApiService.register(registerRequest)
+                
+                android.util.Log.d("AUTH_DEBUG", "Response received: $response")
+                android.util.Log.d("AUTH_DEBUG", "Token: ${response.token}")
+                android.util.Log.d("AUTH_DEBUG", "User: ${response.user}")
+                android.util.Log.d("AUTH_DEBUG", "======================================")
+                
                 Result.success(response)
+            } catch (e: retrofit2.HttpException) {
+                val errorBody = try {
+                    e.response()?.errorBody()?.string()
+                } catch (ex: Exception) {
+                    "Unable to read error body"
+                }
+                android.util.Log.e("AUTH_ERROR", "HTTP ${e.code()}: $errorBody", e)
+                android.util.Log.e("AUTH_ERROR", "Full exception: ", e)
+                Result.failure(Exception("HTTP ${e.code()}: $errorBody"))
             } catch (e: UnknownHostException) {
+                android.util.Log.e("AUTH_ERROR", "UnknownHostException", e)
                 Result.failure(Exception("Erreur réseau: Impossible de se connecter au serveur"))
             } catch (e: SocketTimeoutException) {
+                android.util.Log.e("AUTH_ERROR", "SocketTimeoutException", e)
                 Result.failure(Exception("Erreur réseau: Délai d'attente dépassé"))
             } catch (e: IOException) {
+                android.util.Log.e("AUTH_ERROR", "IOException: ${e.message}", e)
                 Result.failure(Exception("Erreur réseau: ${e.message ?: "Problème de connexion"}"))
             } catch (e: com.google.gson.JsonSyntaxException) {
-                Result.failure(Exception("Erreur: Format de réponse invalide du serveur. Vérifiez que le backend renvoie {token, user}."))
+                android.util.Log.e("AUTH_ERROR", "JsonSyntaxException: ${e.message}", e)
+                android.util.Log.e("AUTH_ERROR", "Cause: ${e.cause}")
+                Result.failure(Exception("Erreur de format JSON: ${e.message}"))
             } catch (e: Exception) {
+                android.util.Log.e("AUTH_ERROR", "Exception: ${e.message}", e)
+                android.util.Log.e("AUTH_ERROR", "Exception type: ${e.javaClass.name}")
                 Result.failure(Exception("Erreur: ${e.message ?: "Impossible de créer le compte"}"))
             }
         }

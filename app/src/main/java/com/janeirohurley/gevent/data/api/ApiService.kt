@@ -185,19 +185,61 @@ interface ApiService {
     ): OrganizerEvent
 
     /**
+     * Supprimer un événement
+     */
+    @DELETE("events/{id}/")
+    suspend fun deleteEvent(@Path("id") eventId: String): Response<Unit>
+
+    /**
      * Mettre à jour un événement
      */
-    @PUT("events/{id}/")
+    @PATCH("events/{id}/")
     suspend fun updateEvent(
         @Path("id") eventId: String,
         @Body request: com.janeirohurley.gevent.data.model.UpdateEventRequest
     ): com.janeirohurley.gevent.data.model.OrganizerEvent
 
     /**
+     * Mettre à jour un événement avec image
+     */
+    @Multipart
+    @PATCH("events/{id}/")
+    suspend fun updateEventWithImage(
+        @Path("id") eventId: String,
+        @Part("title") title: okhttp3.RequestBody?,
+        @Part("description") description: okhttp3.RequestBody?,
+        @Part("category_id") categoryId: okhttp3.RequestBody?,
+        @Part("location") location: okhttp3.RequestBody?,
+        @Part("date") date: okhttp3.RequestBody?,
+        @Part("end_date") endDate: okhttp3.RequestBody?,
+        @Part("duration") duration: okhttp3.RequestBody?,
+        @Part("is_free") isFree: okhttp3.RequestBody?,
+        @Part("price") price: okhttp3.RequestBody?,
+        @Part("tva_rate") tvaRate: okhttp3.RequestBody?,
+        @Part("total_capacity") totalCapacity: okhttp3.RequestBody?,
+        @Part image_url: okhttp3.MultipartBody.Part?
+    ): com.janeirohurley.gevent.data.model.OrganizerEvent
+
+    /**
      * Annuler un événement
      */
-    @POST("events/{id}/cancel/")
-    suspend fun cancelEvent(@Path("id") eventId: String): com.janeirohurley.gevent.data.model.OrganizerEvent
+    @POST("events/{id}/cancel_event/")
+    suspend fun cancelEvent(@Path("id") eventId: String): Response<Map<String, Any>>
+
+    /**
+     * Soft delete d'un événement
+     */
+    @DELETE("events/{id}/soft_delete/")
+    suspend fun softDeleteEvent(@Path("id") eventId: String): Response<Map<String, String>>
+
+    /**
+     * Changer le statut d'un événement
+     */
+    @POST("events/{id}/change_status/")
+    suspend fun changeEventStatus(
+        @Path("id") eventId: String,
+        @Body status: Map<String, String>
+    ): com.janeirohurley.gevent.data.model.OrganizerEvent
 
     /**
      * Marquer un événement comme terminé
@@ -216,6 +258,26 @@ interface ApiService {
      */
     @POST("tickets/validate_qr/")
     suspend fun validateTicket(@Body qr_data: Map<String, String>): TicketValidationResponse
+
+    // ==================== WALLET ====================
+
+    /**
+     * Récupérer le solde du wallet
+     */
+    @GET("wallet/balance/")
+    suspend fun getWalletBalance(): WalletBalance
+
+    /**
+     * Récupérer l'historique des transactions
+     */
+    @GET("wallet/")
+    suspend fun getTransactions(): List<Transaction>
+
+    /**
+     * Déposer de l'argent
+     */
+    @POST("wallet/deposit/")
+    suspend fun depositMoney(@Body request: DepositRequest): Transaction
 }
 
 // ==================== REQUÊTES ====================

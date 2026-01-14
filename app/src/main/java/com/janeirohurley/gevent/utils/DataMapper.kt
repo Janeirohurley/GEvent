@@ -26,12 +26,11 @@ object DataMapper {
                 inputPattern = "yyyy-MM-dd'T'HH:mm:ss",
                 outputPattern = "dd MMM yyyy à HH:mm"
             ) ?: this.date,
-            // Si imageUrl est null, utiliser une image par défaut
             imageRes = this.imageUrl ?: R.drawable.logo,
             isFavorite = this.isFavorite,
             creatorImageRes = this.creator?.avatarUrl ?: R.drawable.logo,
             creatorName = this.creator?.name ?: "creator name",
-            // Ne montrer que les avatars réels, pas de fallback si vide
+            creatorPhone = this.creator?.phone,
             joinedAvatars = this.attendees?.mapNotNull { it.avatarUrl } ?: emptyList(),
             isFree = this.isFree,
             price = this.price,

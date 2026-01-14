@@ -19,6 +19,9 @@ fun MyEventsContent(
     onRefresh: () -> Unit,
     onCancelEvent: (String) -> Unit,
     onCompleteEvent: (String) -> Unit,
+    onEditEvent: (String) -> Unit,
+    onDeleteEvent: (String) -> Unit,
+    onChangeStatus: (String, String) -> Unit = { _, _ -> },
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -68,8 +71,9 @@ fun MyEventsContent(
                         event = event,
                         onCancel = { onCancelEvent(event.id) },
                         onComplete = { onCompleteEvent(event.id) },
-                        onEdit = { /* TODO: Navigation vers édition */ },
-                        onDelete = { /* TODO: Suppression avec confirmation */ }
+                        onEdit = { onEditEvent(event.id) },
+                        onDelete = { onDeleteEvent(event.id) },
+                        onChangeStatus = { status -> onChangeStatus(event.id, status) }
                     )
                 }
             }

@@ -117,6 +117,9 @@ data class OrganizerEvent(
 
     val isCancelled: Boolean
         get() = status == "cancelled"
+    
+    val isDeleted: Boolean
+        get() = status == "deleted"
 }
 
 /**
@@ -198,6 +201,36 @@ data class UpdateEventRequest(
 
     @SerializedName("description")
     val description: String?,
+
+    @SerializedName("category_id")
+    val categoryId: Int?,
+
+    @SerializedName("location")
+    val location: String?,
+
+    @SerializedName("latitude")
+    val latitude: Double?,
+
+    @SerializedName("longitude")
+    val longitude: Double?,
+
+    @SerializedName("date")
+    val date: String?,
+
+    @SerializedName("end_date")
+    val endDate: String?,
+
+    @SerializedName("duration")
+    val duration: String?,
+
+    @SerializedName("is_free")
+    val isFree: Boolean?,
+
+    @SerializedName("price")
+    val price: String?,
+
+    @SerializedName("tva_rate")
+    val tvaRate: String?,
 
     @SerializedName("status")
     val status: String?,

@@ -8,6 +8,7 @@ data class EventUiModel(
     val isFavorite: Boolean = false,
     val creatorImageRes: Any, // Peut être Int (ressource locale) ou String (URL)
     val creatorName: String,
+    val creatorPhone: String? = null, // Numéro de téléphone du créateur
     val joinedAvatars: List<Any>, // Peut contenir Int ou String
     val isFree: Boolean = true,
     val price: String? = null,

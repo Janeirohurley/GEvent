@@ -78,7 +78,10 @@ data class Creator(
     val name: String,
 
     @SerializedName("avatar_url")
-    val avatarUrl: String? = null
+    val avatarUrl: String? = null,
+
+    @SerializedName("organizer_phone")
+    val phone: String? = null
 )
 
 data class Participant(

@@ -189,23 +189,27 @@ fun EventDetailsScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .fillMaxHeight(0.7f) // 👈 70% de la hauteur
                             .padding(horizontal = 24.dp, vertical = 12.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
 
                         Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.clickable {
+                                val shareText = "🎉 ${event.title}\n\n" +
+                                        "📅 ${event.date}\n" +
+                                        "📍 ${event.location ?: "Lieu non spécifié"}\n" +
+                                        (if (event.isFree) "🎁 Gratuit" else "💵 ${event.price} ${event.currency}") + "\n\n" +
+                                        (event.description ?: "")
+                                shareText(context, shareText)
+                            }
                         ) {
                             Icon(
                                 painter = painterResource(R.drawable.fi_rr_paper_plane),
-                                contentDescription = "Envoyer",
+                                contentDescription = "Partager",
                                 tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(20.dp)
-                                    .clickable {
-                                    shareText(context, event.description)
-                                }
                             )
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
@@ -216,28 +220,65 @@ fun EventDetailsScreen(
                         }
 
                         Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.clickable(
+                                enabled = event.creatorPhone != null
+                            ) {
+                                event.creatorPhone?.let { phone ->
+                                    val intent = android.content.Intent(android.content.Intent.ACTION_VIEW).apply {
+                                        data = android.net.Uri.parse("https://wa.me/$phone")
+                                    }
+                                    context.startActivity(intent)
+                                }
+                            }
                         ) {
                             Icon(
                                 painter = painterResource(R.drawable.fi_rr_comment),
-                                contentDescription = "Message",
-                                tint = MaterialTheme.colorScheme.primary,
+                                contentDescription = "Contact",
+                                tint = if (event.creatorPhone != null) MaterialTheme.colorScheme.primary 
+                                       else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
                                 modifier = Modifier.size(20.dp)
                             )
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
                                 text = "Contact",
                                 fontSize = 10.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = if (event.creatorPhone != null) MaterialTheme.colorScheme.onSurfaceVariant
+                                        else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
                             )
                         }
 
                         Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.clickable {
+                                try {
+                                    val intent = android.content.Intent(android.content.Intent.ACTION_INSERT).apply {
+                                        data = android.provider.CalendarContract.Events.CONTENT_URI
+                                        putExtra(android.provider.CalendarContract.Events.TITLE, event.title)
+                                        putExtra(android.provider.CalendarContract.Events.DESCRIPTION, event.description)
+                                        putExtra(android.provider.CalendarContract.Events.EVENT_LOCATION, event.location)
+                                        
+                                        // Parser la date
+                                        try {
+                                            val dateFormat = java.text.SimpleDateFormat("dd MMM yyyy, HH:mm", java.util.Locale.FRENCH)
+                                            val date = dateFormat.parse(event.date)
+                                            date?.let {
+                                                putExtra(android.provider.CalendarContract.EXTRA_EVENT_BEGIN_TIME, it.time)
+                                                putExtra(android.provider.CalendarContract.EXTRA_EVENT_END_TIME, it.time + 3600000) // +1h
+                                            }
+                                        } catch (e: Exception) {
+                                            // Si le parsing échoue, utiliser la date actuelle
+                                        }
+                                    }
+                                    context.startActivity(intent)
+                                } catch (e: Exception) {
+                                    // Gérer l'erreur si l'app calendrier n'est pas disponible
+                                }
+                            }
                         ) {
                             Icon(
-                                painter = painterResource(R.drawable.fi_rr_box_alt),
-                                contentDescription = "Colis",
+                                painter = painterResource(R.drawable.fi_rr_calendar),
+                                contentDescription = "Calendrier",
                                 tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(20.dp)
                             )

@@ -255,15 +255,64 @@ class OrganizerRepository(
     }
 
     /**
-     * Annuler un événement
+     * Mettre à jour un événement avec image
      */
-    suspend fun cancelEvent(eventId: String): Result<OrganizerEvent> = withContext(Dispatchers.IO) {
+    suspend fun updateEventWithImage(
+        eventId: String,
+        title: String,
+        description: String?,
+        categoryId: Int?,
+        location: String?,
+        date: String?,
+        endDate: String?,
+        duration: String?,
+        isFree: Boolean?,
+        price: String?,
+        tvaRate: String?,
+        totalCapacity: Int?,
+        imageUri: android.net.Uri,
+        context: android.content.Context
+    ): Result<OrganizerEvent> = withContext(Dispatchers.IO) {
         try {
-            Log.d("ORGANIZER_DEBUG", "========== CANCEL EVENT ==========")
+            Log.d("ORGANIZER_DEBUG", "========== UPDATE EVENT WITH IMAGE ==========")
             Log.d("ORGANIZER_DEBUG", "Event ID: $eventId")
-            val event = apiService.cancelEvent(eventId)
-            Log.d("ORGANIZER_DEBUG", "Event cancelled: ${event.id}")
-            Log.d("ORGANIZER_DEBUG", "==================================")
+            
+            val titleBody = okhttp3.RequestBody.create("text/plain".toMediaTypeOrNull(), title)
+            val descriptionBody = description?.let { okhttp3.RequestBody.create("text/plain".toMediaTypeOrNull(), it) }
+            val categoryIdBody = categoryId?.let { okhttp3.RequestBody.create("text/plain".toMediaTypeOrNull(), it.toString()) }
+            val locationBody = location?.let { okhttp3.RequestBody.create("text/plain".toMediaTypeOrNull(), it) }
+            val dateBody = date?.let { okhttp3.RequestBody.create("text/plain".toMediaTypeOrNull(), it) }
+            val endDateBody = endDate?.let { okhttp3.RequestBody.create("text/plain".toMediaTypeOrNull(), it) }
+            val durationBody = duration?.let { okhttp3.RequestBody.create("text/plain".toMediaTypeOrNull(), it) }
+            val isFreeBody = isFree?.let { okhttp3.RequestBody.create("text/plain".toMediaTypeOrNull(), it.toString()) }
+            val priceBody = price?.let { okhttp3.RequestBody.create("text/plain".toMediaTypeOrNull(), it) }
+            val tvaRateBody = tvaRate?.let { okhttp3.RequestBody.create("text/plain".toMediaTypeOrNull(), it) }
+            val totalCapacityBody = totalCapacity?.let { okhttp3.RequestBody.create("text/plain".toMediaTypeOrNull(), it.toString()) }
+            
+            val contentResolver = context.contentResolver
+            val inputStream = contentResolver.openInputStream(imageUri)
+            val bytes = inputStream?.readBytes() ?: throw Exception("Impossible de lire l'image")
+            inputStream?.close()
+            
+            val requestBody = okhttp3.RequestBody.create(
+                (contentResolver.getType(imageUri) ?: "image/*").toMediaTypeOrNull(),
+                bytes
+            )
+            
+            val imagePart = okhttp3.MultipartBody.Part.createFormData(
+                "image_url",
+                "event_image.jpg",
+                requestBody
+            )
+            
+            val event = apiService.updateEventWithImage(
+                eventId, titleBody, descriptionBody, categoryIdBody, locationBody,
+                dateBody, endDateBody, durationBody, isFreeBody, priceBody, tvaRateBody,
+                totalCapacityBody, imagePart
+            )
+            
+            Log.d("ORGANIZER_DEBUG", "Event updated with image: ${event.id}")
+            Log.d("ORGANIZER_DEBUG", "=============================================")
             Result.success(event)
         } catch (e: retrofit2.HttpException) {
             val errorBody = try {
@@ -275,7 +324,102 @@ class OrganizerRepository(
             Result.failure(Exception("Erreur HTTP ${e.code()}: $errorBody"))
         } catch (e: Exception) {
             Log.e("ORGANIZER_ERROR", "Exception: ${e.message}", e)
+            Result.failure(Exception("Erreur: ${e.message ?: "Erreur de mise à jour"}"))
+        }
+    }
+
+    /**
+     * Supprimer un événement (soft delete)
+     */
+    suspend fun deleteEvent(eventId: String): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            Log.d("ORGANIZER_DEBUG", "========== SOFT DELETE EVENT ==========")
+            Log.d("ORGANIZER_DEBUG", "Event ID: $eventId")
+            val response = apiService.softDeleteEvent(eventId)
+            if (response.isSuccessful) {
+                val message = response.body()?.get("message") ?: "Événement supprimé"
+                Log.d("ORGANIZER_DEBUG", "Event soft deleted: $message")
+                Log.d("ORGANIZER_DEBUG", "=======================================")
+                Result.success(message)
+            } else {
+                val errorBody = response.errorBody()?.string()
+                val errorMessage = extractErrorMessage(errorBody)
+                Log.e("ORGANIZER_ERROR", "HTTP ${response.code()}: $errorMessage")
+                Result.failure(Exception(errorMessage))
+            }
+        } catch (e: retrofit2.HttpException) {
+            val errorBody = try {
+                e.response()?.errorBody()?.string()
+            } catch (ex: Exception) {
+                null
+            }
+            val errorMessage = extractErrorMessage(errorBody)
+            Log.e("ORGANIZER_ERROR", "HTTP ${e.code()}: $errorMessage", e)
+            Result.failure(Exception(errorMessage))
+        } catch (e: Exception) {
+            Log.e("ORGANIZER_ERROR", "Exception: ${e.message}", e)
+            Result.failure(Exception("Erreur: ${e.message ?: "Erreur de suppression"}"))
+        }
+    }
+
+    /**
+     * Annuler un événement et rembourser
+     */
+    suspend fun cancelEvent(eventId: String): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            Log.d("ORGANIZER_DEBUG", "========== CANCEL EVENT ==========")
+            Log.d("ORGANIZER_DEBUG", "Event ID: $eventId")
+            val response = apiService.cancelEvent(eventId)
+            if (response.isSuccessful) {
+                val body = response.body()
+                val message = body?.get("message") as? String ?: "Événement annulé avec succès"
+                Log.d("ORGANIZER_DEBUG", "Event cancelled: $message")
+                Log.d("ORGANIZER_DEBUG", "==================================")
+                Result.success(message)
+            } else {
+                val errorBody = response.errorBody()?.string()
+                val errorMessage = extractErrorMessage(errorBody)
+                Log.e("ORGANIZER_ERROR", "HTTP ${response.code()}: $errorMessage")
+                Result.failure(Exception(errorMessage))
+            }
+        } catch (e: retrofit2.HttpException) {
+            val errorBody = try {
+                e.response()?.errorBody()?.string()
+            } catch (ex: Exception) {
+                null
+            }
+            val errorMessage = extractErrorMessage(errorBody)
+            Log.e("ORGANIZER_ERROR", "HTTP ${e.code()}: $errorMessage", e)
+            Result.failure(Exception(errorMessage))
+        } catch (e: Exception) {
+            Log.e("ORGANIZER_ERROR", "Exception: ${e.message}", e)
             Result.failure(Exception("Erreur: ${e.message ?: "Erreur d'annulation"}"))
+        }
+    }
+
+    /**
+     * Changer le statut d'un événement
+     */
+    suspend fun changeEventStatus(eventId: String, status: String): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            Log.d("ORGANIZER_DEBUG", "========== CHANGE EVENT STATUS ==========")
+            Log.d("ORGANIZER_DEBUG", "Event ID: $eventId, New Status: $status")
+            val event = apiService.changeEventStatus(eventId, mapOf("status" to status))
+            Log.d("ORGANIZER_DEBUG", "Status changed successfully")
+            Log.d("ORGANIZER_DEBUG", "=========================================")
+            Result.success("Statut changé avec succès")
+        } catch (e: retrofit2.HttpException) {
+            val errorBody = try {
+                e.response()?.errorBody()?.string()
+            } catch (ex: Exception) {
+                null
+            }
+            val errorMessage = extractErrorMessage(errorBody)
+            Log.e("ORGANIZER_ERROR", "HTTP ${e.code()}: $errorMessage", e)
+            Result.failure(Exception(errorMessage))
+        } catch (e: Exception) {
+            Log.e("ORGANIZER_ERROR", "Exception: ${e.message}", e)
+            Result.failure(Exception("Erreur: ${e.message ?: "Erreur de changement de statut"}"))
         }
     }
 

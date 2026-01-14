@@ -28,6 +28,7 @@ import androidx.navigation.NavHostController
 import com.janeirohurley.gevent.R
 import com.janeirohurley.gevent.ui.components.CustomInput
 import com.janeirohurley.gevent.viewmodel.AuthViewModel
+import com.janeirohurley.gevent.utils.ValidationUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -118,6 +119,21 @@ fun RegisterScreen(
                 placeholder = "Nom d'utilisateur *",
                 height = 50.dp
             )
+            
+            // Afficher le username nettoyé si différent
+            val cleanedUsername = ValidationUtils.cleanUsername(username)
+            
+            if (username.isNotBlank() && cleanedUsername != username) {
+                Text(
+                    text = "Sera enregistré comme: $cleanedUsername",
+                    color = MaterialTheme.colorScheme.primary,
+                    fontSize = 11.sp,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, top = 4.dp),
+                    textAlign = TextAlign.Start
+                )
+            }
 
             Spacer(modifier = Modifier.height(12.dp))
 

@@ -180,6 +180,105 @@ class OrganizerViewModel(
     }
 
     /**
+     * Mettre à jour un événement avec image
+     */
+    fun updateEventWithImage(
+        eventId: String,
+        title: String,
+        description: String?,
+        categoryId: Int?,
+        location: String?,
+        date: String?,
+        endDate: String?,
+        duration: String?,
+        isFree: Boolean?,
+        price: String?,
+        tvaRate: String?,
+        totalCapacity: Int?,
+        imageUri: android.net.Uri,
+        context: android.content.Context
+    ) {
+        viewModelScope.launch {
+            try {
+                Log.d("ORGANIZER_VM", "========== UPDATE EVENT WITH IMAGE ==========")
+                _isLoading.value = true
+                _error.value = null
+                _operationSuccess.value = null
+
+                repository.updateEventWithImage(
+                    eventId = eventId,
+                    title = title,
+                    description = description,
+                    categoryId = categoryId,
+                    location = location,
+                    date = date,
+                    endDate = endDate,
+                    duration = duration,
+                    isFree = isFree,
+                    price = price,
+                    tvaRate = tvaRate,
+                    totalCapacity = totalCapacity,
+                    imageUri = imageUri,
+                    context = context
+                ).fold(
+                    onSuccess = { event ->
+                        Log.d("ORGANIZER_VM", "Event updated with image successfully: ${event.id}")
+                        _operationSuccess.value = "Événement mis à jour"
+                        _isLoading.value = false
+                        loadMyEvents()
+                    },
+                    onFailure = { exception ->
+                        Log.e("ORGANIZER_VM", "Error updating event with image: ${exception.message}", exception)
+                        _error.value = exception.message ?: "Erreur de mise à jour"
+                        _isLoading.value = false
+                    }
+                )
+                Log.d("ORGANIZER_VM", "=============================================")
+            } catch (e: Exception) {
+                Log.e("ORGANIZER_VM", "Unexpected error in updateEventWithImage", e)
+                _error.value = "Erreur inattendue: ${e.message}"
+                _isLoading.value = false
+            }
+        }
+    }
+
+    /**
+     * Mettre à jour un événement (version simplifiée)
+     */
+    fun updateEvent(
+        eventId: String,
+        title: String,
+        description: String?,
+        categoryId: Int?,
+        location: String?,
+        date: String?,
+        endDate: String?,
+        duration: String?,
+        isFree: Boolean?,
+        price: String?,
+        tvaRate: String?,
+        totalCapacity: Int?
+    ) {
+        val request = UpdateEventRequest(
+            title = title,
+            description = description,
+            categoryId = categoryId,
+            location = location,
+            latitude = null,
+            longitude = null,
+            date = date,
+            endDate = endDate,
+            duration = duration,
+            isFree = isFree,
+            price = price,
+            tvaRate = tvaRate,
+            status = null,
+            totalCapacity = totalCapacity
+        )
+        updateEvent(eventId, request)
+    }
+
+    /**
      * Mettre à jour un événement
      */
     fun updateEvent(eventId: String, request: UpdateEventRequest) {
@@ -213,7 +312,40 @@ class OrganizerViewModel(
     }
 
     /**
-     * Annuler un événement
+     * Supprimer un événement (soft delete)
+     */
+    fun deleteEvent(eventId: String) {
+        viewModelScope.launch {
+            try {
+                Log.d("ORGANIZER_VM", "========== DELETE EVENT ==========")
+                _isLoading.value = true
+                _error.value = null
+                _operationSuccess.value = null
+
+                repository.deleteEvent(eventId).fold(
+                    onSuccess = { message ->
+                        Log.d("ORGANIZER_VM", "Event deleted successfully: $eventId")
+                        _operationSuccess.value = message
+                        _isLoading.value = false
+                        loadMyEvents()
+                    },
+                    onFailure = { exception ->
+                        Log.e("ORGANIZER_VM", "Error deleting event: ${exception.message}", exception)
+                        _error.value = exception.message ?: "Erreur de suppression"
+                        _isLoading.value = false
+                    }
+                )
+                Log.d("ORGANIZER_VM", "==================================")
+            } catch (e: Exception) {
+                Log.e("ORGANIZER_VM", "Unexpected error in deleteEvent", e)
+                _error.value = "Erreur inattendue: ${e.message}"
+                _isLoading.value = false
+            }
+        }
+    }
+
+    /**
+     * Annuler un événement et rembourser
      */
     fun cancelEvent(eventId: String) {
         viewModelScope.launch {
@@ -224,9 +356,9 @@ class OrganizerViewModel(
                 _operationSuccess.value = null
 
                 repository.cancelEvent(eventId).fold(
-                    onSuccess = { event ->
-                        Log.d("ORGANIZER_VM", "Event cancelled successfully: ${event.id}")
-                        _operationSuccess.value = "Événement annulé"
+                    onSuccess = { message ->
+                        Log.d("ORGANIZER_VM", "Event cancelled successfully: $eventId")
+                        _operationSuccess.value = message
                         _isLoading.value = false
                         loadMyEvents()
                     },
@@ -239,6 +371,39 @@ class OrganizerViewModel(
                 Log.d("ORGANIZER_VM", "==================================")
             } catch (e: Exception) {
                 Log.e("ORGANIZER_VM", "Unexpected error in cancelEvent", e)
+                _error.value = "Erreur inattendue: ${e.message}"
+                _isLoading.value = false
+            }
+        }
+    }
+
+    /**
+     * Changer le statut d'un événement
+     */
+    fun changeEventStatus(eventId: String, status: String) {
+        viewModelScope.launch {
+            try {
+                Log.d("ORGANIZER_VM", "========== CHANGE EVENT STATUS ==========")
+                _isLoading.value = true
+                _error.value = null
+                _operationSuccess.value = null
+
+                repository.changeEventStatus(eventId, status).fold(
+                    onSuccess = { message ->
+                        Log.d("ORGANIZER_VM", "Status changed successfully: $eventId -> $status")
+                        _operationSuccess.value = message
+                        _isLoading.value = false
+                        loadMyEvents()
+                    },
+                    onFailure = { exception ->
+                        Log.e("ORGANIZER_VM", "Error changing status: ${exception.message}", exception)
+                        _error.value = exception.message ?: "Erreur de changement de statut"
+                        _isLoading.value = false
+                    }
+                )
+                Log.d("ORGANIZER_VM", "=========================================")
+            } catch (e: Exception) {
+                Log.e("ORGANIZER_VM", "Unexpected error in changeEventStatus", e)
                 _error.value = "Erreur inattendue: ${e.message}"
                 _isLoading.value = false
             }

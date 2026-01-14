@@ -54,14 +54,7 @@ sealed class NavigationItem(
         R.drawable.fi_rr_heart,
         R.drawable.fi_rr_heart
     )
-
-    object Setting : NavigationItem(
-        "setting",
-        "Setting",
-        R.drawable.fi_rr_settings,
-        R.drawable.fi_rr_settings
-    )
-
+    
     object Profile : NavigationItem(
         "profile",
         "Profil",
@@ -77,10 +70,10 @@ sealed class NavigationItem(
         val leftItems = listOf(Home, Explore)
 
         // Items à droite du bouton central
-        val rightItems = listOf(Favorites, Setting)
+        val rightItems = listOf(Favorites, Profile)
 
         // Tous les items normaux (pour compatibilité)
-        val items = listOf(Home, Explore, Favorites, Setting, Profile)
+        val items = listOf(Home, Explore, Favorites, Profile)
     }
 }
 

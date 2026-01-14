@@ -172,7 +172,11 @@ fun MainScreen() {
                 ManageEventsScreen(navController = navController)
             }
             composable("create_event") {
-                CreateEventScreen(navController = navController)
+                CreateEventScreen(navController = navController, eventId = null)
+            }
+            composable("create_event/{eventId}") { backStackEntry ->
+                val eventId = backStackEntry.arguments?.getString("eventId")
+                CreateEventScreen(navController = navController, eventId = eventId)
             }
             composable("qr_scanner") {
                 QRScannerScreen(navController = navController)
