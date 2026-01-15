@@ -88,7 +88,7 @@ dependencies {
     implementation("androidx.camera:camera-view:1.3.1")
 
     // ML Kit pour le scan QR
-    implementation("com.google.mlkit:barcode-scanning:17.2.0")
+    implementation("com.google.mlkit:barcode-scanning:17.3.0")
     implementation(libs.androidx.camera.core)
 
     testImplementation(libs.junit)
