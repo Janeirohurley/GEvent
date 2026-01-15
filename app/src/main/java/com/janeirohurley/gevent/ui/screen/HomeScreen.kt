@@ -127,7 +127,17 @@ fun HomeScreen(
 
     // Charger les données en fonction du filtre et de la recherche
     LaunchedEffect(selectedFilter, searchQuery) {
+        // Debounce de 500ms pour la recherche
+        kotlinx.coroutines.delay(500)
         viewModel.loadEvents(
+            category = selectedFilter,
+            search = searchQuery.ifEmpty { null }
+        )
+        viewModel.loadPopularEvents(
+            category = selectedFilter,
+            search = searchQuery.ifEmpty { null }
+        )
+        viewModel.loadUpcomingEvents(
             category = selectedFilter,
             search = searchQuery.ifEmpty { null }
         )

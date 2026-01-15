@@ -58,10 +58,10 @@ fun ProfileScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Profil", fontWeight = FontWeight.Bold) },
+                title = { Text("Profil", fontWeight = FontWeight.Bold, fontSize = 14.sp) },
                 actions = {
                     IconButton(onClick = { authViewModel.logout() },) {
-                        Icon(painterResource(R.drawable.fi_rr_sign_out), "deconnection")
+                        Icon(painterResource(R.drawable.fi_rr_sign_out), "deconnection",modifier= Modifier.size(10.dp))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(

@@ -77,9 +77,13 @@ class EventViewModel(
     /**
      * Charger les événements populaires
      */
-    fun loadPopularEvents(limit: Int = 10) {
+    fun loadPopularEvents(
+        limit: Int = 10,
+        category: String? = null,
+        search: String? = null
+    ) {
         viewModelScope.launch {
-            repository.getPopularEvents(limit).fold(
+            repository.getPopularEvents(limit, category, search).fold(
                 onSuccess = { eventList ->
                     _popularEvents.value = eventList
                 },
@@ -93,9 +97,13 @@ class EventViewModel(
     /**
      * Charger les événements à venir
      */
-    fun loadUpcomingEvents(limit: Int = 10) {
+    fun loadUpcomingEvents(
+        limit: Int = 10,
+        category: String? = null,
+        search: String? = null
+    ) {
         viewModelScope.launch {
-            repository.getUpcomingEvents(limit).fold(
+            repository.getUpcomingEvents(limit, category, search).fold(
                 onSuccess = { eventList ->
                     _upcomingEvents.value = eventList
                 },

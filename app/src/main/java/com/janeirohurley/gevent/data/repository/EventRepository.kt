@@ -60,9 +60,13 @@ class EventRepository(
     /**
      * Récupérer les événements populaires
      */
-    suspend fun getPopularEvents(limit: Int = 10): Result<List<Event>> = withContext(Dispatchers.IO) {
+    suspend fun getPopularEvents(
+        limit: Int = 10,
+        category: String? = null,
+        search: String? = null
+    ): Result<List<Event>> = withContext(Dispatchers.IO) {
         try {
-            val events = apiService.getPopularEvents(limit)
+            val events = apiService.getPopularEvents(limit, category, search)
             Result.success(events)
         } catch (e: UnknownHostException) {
             Result.failure(Exception("Erreur réseau: Impossible de se connecter au serveur"))
@@ -78,9 +82,13 @@ class EventRepository(
     /**
      * Récupérer les événements à venir
      */
-    suspend fun getUpcomingEvents(limit: Int = 10): Result<List<Event>> = withContext(Dispatchers.IO) {
+    suspend fun getUpcomingEvents(
+        limit: Int = 10,
+        category: String? = null,
+        search: String? = null
+    ): Result<List<Event>> = withContext(Dispatchers.IO) {
         try {
-            val events = apiService.getUpcomingEvents(limit)
+            val events = apiService.getUpcomingEvents(limit, category, search)
             Result.success(events)
         } catch (e: UnknownHostException) {
             Result.failure(Exception("Erreur réseau: Impossible de se connecter au serveur"))

@@ -43,13 +43,21 @@ interface ApiService {
      * Récupérer les événements populaires
      */
     @GET("events/popular/")
-    suspend fun getPopularEvents(@Query("limit") limit: Int = 10): List<Event>
+    suspend fun getPopularEvents(
+        @Query("limit") limit: Int = 10,
+        @Query("category") category: String? = null,
+        @Query("search") search: String? = null
+    ): List<Event>
 
     /**
      * Récupérer les événements à venir
      */
     @GET("events/upcoming/")
-    suspend fun getUpcomingEvents(@Query("limit") limit: Int = 10): List<Event>
+    suspend fun getUpcomingEvents(
+        @Query("limit") limit: Int = 10,
+        @Query("category") category: String? = null,
+        @Query("search") search: String? = null
+    ): List<Event>
 
     /**
      * Rechercher des événements
